@@ -1,25 +1,32 @@
 #include <iostream>
 
+#if RAND_MAX == 32767
+#define Rand32() ((rand() << 16) + (rand() << 1) + (rand() & 1))
+#else
+#define Rand32() rand()
+#endif
+
+#include <cinttypes>
 #include <windows.h>
 
-#include <vector>
+static bool quit = false;
 
 LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-static char* frameData;
+static int frameWidth{};
+static int frameHeight{};
+static uint32_t* frameData;
 static BITMAPINFO bitmapInfo;
-static HBITMAP bitmapHandle;
+static HBITMAP bitmap;
 static HDC frameDeviceContext;
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, PSTR cmdLine, int cmdShow) {
-    const char ClassName[] = "Software Renderer";
-    WNDCLASS windowClass{};
-
-    windowClass.lpfnWndProc   = windowProc;
-    windowClass.hInstance     = instance;
-    windowClass.lpszClassName = ClassName;
-
-    RegisterClass(&windowClass);
+    const char window_class_name[] = "My Window Class";
+    static WNDCLASS window_class   = {0};
+    window_class.lpfnWndProc       = windowProc;
+    window_class.hInstance         = instance;
+    window_class.lpszClassName     = window_class_name;
+    RegisterClass(&window_class);
 
     bitmapInfo.bmiHeader.biSize        = sizeof(bitmapInfo.bmiHeader);
     bitmapInfo.bmiHeader.biPlanes      = 1;
@@ -27,53 +34,35 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, PSTR cmdLine, int
     bitmapInfo.bmiHeader.biCompression = BI_RGB;
     frameDeviceContext                 = CreateCompatibleDC(0);
 
-    HWND windowHandle = CreateWindowExA(
-            0,
-            ClassName,
-            "Software Renderer",
-            WS_OVERLAPPEDWINDOW,
-            CW_USEDEFAULT,
-            CW_USEDEFAULT,
+    static HWND window_handle;
+    window_handle = CreateWindow(
+            window_class_name,
+            reinterpret_cast<LPCSTR>(L"Drawing Pixels"),
+            WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+            640,
+            300,
             1280,
             720,
-            nullptr,
-            nullptr,
+            NULL,
+            NULL,
             instance,
-            nullptr
+            NULL
     );
-
-    if (windowHandle == nullptr) {
-        return 0;
+    if (window_handle == NULL) {
+        return -1;
     }
 
-    ShowWindow(windowHandle, cmdShow);
+    //frameData = new uint32_t[1280 * 720];
+    while (!quit) {
+        static MSG message = {0};
+        while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) { DispatchMessage(&message); }
 
-    frameData = new char[1280 * 720 * 4];
-    for (int i = 0; i < 720; i++) {
-        for (int j = 0; j < 1280; j++) {
-            int index            = i * 1280 + j * 4;
-            frameData[index + 1] = i;
-            frameData[index + 2] = j;
-            frameData[index + 3] = 32;
-        }
-    }
+        static unsigned int p              = 0;
+        frameData[(p++) % (frameWidth * frameHeight)]    = Rand32();
+        frameData[Rand32() % (frameWidth * frameHeight)] = 0;
 
-    MSG msg{};
-    while (GetMessageA(&msg, nullptr, 0, 0) > 0) {
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
-
-        //for (int i = 0; i < 720; i++) {
-        //    for (int j = 0; j < 1280; j++) {
-        //        int index            = i * 1280 + j * 4;
-        //        frameData[index + 1] = i;
-        //        frameData[index + 2] = j;
-        //        frameData[index + 3] = 32;
-        //    }
-        //}
-
-        //InvalidateRect(windowHandle, nullptr, FALSE);
-        //UpdateWindow(windowHandle);
+        InvalidateRect(window_handle, NULL, FALSE);
+        UpdateWindow(window_handle);
     }
 
     return 0;
@@ -81,14 +70,16 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, PSTR cmdLine, int
 
 LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
-    case WM_PAINT:
+    case WM_QUIT:
+    case WM_DESTROY: {
+        quit = true;
+    } break;
+
+    case WM_PAINT: {
         static PAINTSTRUCT paint;
-        static HDC deviceContext;
-        deviceContext = BeginPaint(hwnd, &paint);
-        BitBlt(deviceContext,
+        static HDC device_context;
+        device_context = BeginPaint(hwnd, &paint);
+        BitBlt(device_context,
                paint.rcPaint.left,
                paint.rcPaint.top,
                paint.rcPaint.right - paint.rcPaint.left,
@@ -97,17 +88,25 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                paint.rcPaint.left,
                paint.rcPaint.top,
                SRCCOPY);
-        return 0;
-    case WM_SIZE:
+        EndPaint(hwnd, &paint);
+    } break;
+
+    case WM_SIZE: {
         bitmapInfo.bmiHeader.biWidth  = LOWORD(lParam);
         bitmapInfo.bmiHeader.biHeight = HIWORD(lParam);
 
-        if (bitmapHandle)
-            DeleteObject(bitmapHandle);
-        bitmapHandle =
-                CreateDIBSection(nullptr, &bitmapInfo, DIB_RGB_COLORS,
-               (void**)&frameData, 0, 0);
-        return 0;
+        if (bitmap)
+            DeleteObject(bitmap);
+        bitmap = CreateDIBSection(NULL, &bitmapInfo, DIB_RGB_COLORS, (void**) &frameData, 0, 0);
+        SelectObject(frameDeviceContext, bitmap);
+
+        frameWidth  = LOWORD(lParam);
+        frameHeight = HIWORD(lParam);
+    } break;
+
+    default: {
+        return DefWindowProc(hwnd, msg, wParam, lParam);
     }
-    return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+    return 0;
 }
