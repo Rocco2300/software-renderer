@@ -1,11 +1,3 @@
-#include <iostream>
-
-#if RAND_MAX == 32767
-#define Rand32() ((rand() << 16) + (rand() << 1) + (rand() & 1))
-#else
-#define Rand32() rand()
-#endif
-
 #include <cinttypes>
 #include <windows.h>
 
@@ -43,25 +35,30 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, PSTR cmdLine, int
             300,
             1280,
             720,
-            NULL,
-            NULL,
+            nullptr,
+            nullptr,
             instance,
-            NULL
+            nullptr
     );
-    if (window_handle == NULL) {
+    if (window_handle == nullptr) {
         return -1;
     }
 
-    //frameData = new uint32_t[1280 * 720];
     while (!quit) {
         static MSG message = {0};
-        while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) { DispatchMessage(&message); }
+        while (PeekMessage(&message, nullptr, 0, 0, PM_REMOVE)) { DispatchMessage(&message); }
 
-        static unsigned int p              = 0;
-        frameData[(p++) % (frameWidth * frameHeight)]    = Rand32();
-        frameData[Rand32() % (frameWidth * frameHeight)] = 0;
+        for (int i = 0; i < frameHeight; i++) {
+            for (int j = 0; j < frameWidth; j++) {
+                uint32_t pixel = 0;
+                pixel |= ((int) (j / (float) frameWidth * 255) << 16);
+                pixel |= ((int) (i / (float) frameHeight * 255) << 8);
+                pixel |= 25;
+                frameData[i * frameWidth + j] = pixel;
+            }
+        }
 
-        InvalidateRect(window_handle, NULL, FALSE);
+        InvalidateRect(window_handle, nullptr, FALSE);
         UpdateWindow(window_handle);
     }
 
@@ -95,9 +92,10 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         bitmapInfo.bmiHeader.biWidth  = LOWORD(lParam);
         bitmapInfo.bmiHeader.biHeight = HIWORD(lParam);
 
-        if (bitmap)
+        if (bitmap) {
             DeleteObject(bitmap);
-        bitmap = CreateDIBSection(NULL, &bitmapInfo, DIB_RGB_COLORS, (void**) &frameData, 0, 0);
+        }
+        bitmap = CreateDIBSection(nullptr, &bitmapInfo, DIB_RGB_COLORS, (void**) &frameData, 0, 0);
         SelectObject(frameDeviceContext, bitmap);
 
         frameWidth  = LOWORD(lParam);
