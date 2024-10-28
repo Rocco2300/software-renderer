@@ -44,8 +44,8 @@ float dot(const vec<T, Size>& u, const vec<T, Size>& v);
 template <typename T, size_t Size>
 vec<T, Size> normalize(const vec<T, Size>& v);
 
-};// namespace vec
+}; // namespace vec
 
 using vec2 = vec::vec<float, 2>;
 
-#include "vec.tpp"
+#include "vec.inl"
