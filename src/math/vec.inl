@@ -1,18 +1,9 @@
-#include "vec.hpp"
+#include "math/vec.hpp"
 
 #include <cmath>
+#include <cassert>
 
 namespace vec {
-
-template <typename T, size_t Size>
-vec<T, Size>::vec(const __m128& reg) {
-    _mm_store_ps(data, reg);
-}
-
-template <typename T, size_t Size>
-vec<T, Size>::operator __m128() const {
-    return _mm_load_ps(data);
-}
 
 template <typename T, size_t Size>
 vec<T, Size>::vec(const T& x, const T& y) {
@@ -39,6 +30,30 @@ vec<T, Size>::vec(const T& x, const T& y, const T& z, const T& w) {
     data[1] = y;
     data[2] = z;
     data[3] = w;
+}
+
+template <typename T, size_t Size>
+vec<T, Size>::vec(const __m128& reg) {
+    _mm_store_ps(data, reg);
+}
+
+template <typename T, size_t Size>
+vec<T, Size>::operator __m128() const {
+    return _mm_load_ps(data);
+}
+
+template <typename T, size_t Size>
+T& vec<T, Size>::operator[](size_t index) {
+    assert(index >= 0 && index < Size);
+
+    return data[index];
+}
+
+template <typename T, size_t Size>
+const T& vec<T, Size>::operator[](size_t index) const {
+    assert(index >= 0 && index < Size);
+
+    return data[index];
 }
 
 template <typename T, size_t Size>

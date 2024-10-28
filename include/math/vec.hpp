@@ -18,6 +18,9 @@ public:
     vec(const __m128& reg);
     operator __m128() const;
 
+    T& operator[](size_t index);
+    const T& operator[](size_t index) const;
+
     //vec2 operator+(vec2 v);
     //vec2 operator-(vec2 v);
     //vec2 operator*(float s);
