@@ -46,17 +46,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, PSTR cmdLine, int
         return -1;
     }
 
-    vec2 a{2.f, 3.f};
-    vec2 b{4.1f, 3.2f};
-    auto add = a + b;
-    auto sub = a - b;
-    auto mul1 = 2.3f * a;
-    auto mul2 = a * 2.3f;
-    auto div = a / 2.f;
-    auto dot = vec::dot(a, b);
-    auto len = vec::length(a);
-    auto norm = vec::normalize(a);
-
     while (!quit) {
         static MSG message = {0};
         while (PeekMessage(&message, nullptr, 0, 0, PM_REMOVE)) { DispatchMessage(&message); }
