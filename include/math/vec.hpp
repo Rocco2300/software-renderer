@@ -27,6 +27,11 @@ public:
     //vec2 operator/(float s);
 
     template <typename V, size_t VSize>
+    friend bool operator==(const vec<V, VSize>& u, const vec<V, VSize>& v);
+    template <typename V, size_t VSize>
+    friend bool operator!=(const vec<V, VSize>& u, const vec<V, VSize>& v);
+
+    template <typename V, size_t VSize>
     friend vec<V, VSize> operator+(const vec<V, VSize>& u, const vec<V, VSize>& v);
     template <typename V, size_t VSize>
     friend vec<V, VSize> operator-(const vec<V, VSize>& u, const vec<V, VSize>& v);
@@ -50,5 +55,7 @@ vec<T, Size> normalize(const vec<T, Size>& v);
 }; // namespace vec
 
 using vec2 = vec::vec<float, 2>;
+using vec3 = vec::vec<float, 3>;
+using vec4 = vec::vec<float, 4>;
 
 #include "vec.inl"

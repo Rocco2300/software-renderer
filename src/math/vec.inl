@@ -49,6 +49,21 @@ T& vec<T, Size>::operator[](size_t index) {
     return data[index];
 }
 
+// god bless https://stackoverflow.com/questions/6042399/how-to-compare-m128-types
+template <typename T, size_t Size>
+bool operator==(const vec<T, Size>& u, const vec<T, Size>& v) {
+    auto eps = _mm_set1_ps(0.001f);
+    auto abd = _mm_andnot_ps(_mm_set1_ps(-0.f), _mm_sub_ps(u, v));
+    return _mm_movemask_ps(_mm_cmplt_ps(abd, eps)) == 0xF;
+}
+
+template <typename T, size_t Size>
+bool operator!=(const vec<T, Size>& u, const vec<T, Size>& v) {
+    auto eps = _mm_set1_ps(0.001f);
+    auto abd = _mm_andnot_ps(_mm_set1_ps(-0.f), _mm_sub_ps(u, v));
+    return _mm_movemask_ps(_mm_cmplt_ps(abd, eps)) != 0xF;
+}
+
 template <typename T, size_t Size>
 const T& vec<T, Size>::operator[](size_t index) const {
     assert(index >= 0 && index < Size);
