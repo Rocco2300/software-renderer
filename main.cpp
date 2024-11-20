@@ -1,6 +1,8 @@
 #include <cinttypes>
 #include <windows.h>
 
+#include "math/vec.hpp"
+
 static bool quit = false;
 
 LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
