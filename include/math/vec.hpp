@@ -2,8 +2,6 @@
 
 #include <smmintrin.h>
 
-namespace vec {
-
 template <typename T, size_t Size>
 class vec {
 private:
@@ -52,10 +50,8 @@ float dot(const vec<T, Size>& u, const vec<T, Size>& v);
 template <typename T, size_t Size>
 vec<T, Size> normalize(const vec<T, Size>& v);
 
-}; // namespace vec
-
-using vec2 = vec::vec<float, 2>;
-using vec3 = vec::vec<float, 3>;
-using vec4 = vec::vec<float, 4>;
+using vec2 = vec<float, 2>;
+using vec3 = vec<float, 3>;
+using vec4 = vec<float, 4>;
 
 #include "vec.inl"

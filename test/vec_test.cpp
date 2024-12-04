@@ -100,8 +100,8 @@ TEST_CASE("vec dot product", "[math]") {
     vec3 c(1.f, 2.f, 3.f);
     vec3 d(0.5f, 7.5f, 8.9f);
 
-    auto res1 = vec::dot(a, b);
-    auto res2 = vec::dot(c, d);
+    auto res1 = dot(a, b);
+    auto res2 = dot(c, d);
     REQUIRE(res1 - 2.3f < Epsilon);
     REQUIRE(res2 - 42.2f < Epsilon);
 }
@@ -110,8 +110,8 @@ TEST_CASE("vec length", "[math]") {
     vec2 a(1.2f, 0.5f);
     vec3 b(1.1f, 0.7f, 2.1f);
 
-    auto res1 = vec::length(a);
-    auto res2 = vec::length(b);
+    auto res1 = length(a);
+    auto res2 = length(b);
     REQUIRE(res1 - 1.3f < Epsilon);
     REQUIRE(res2 - 2.471f < Epsilon);
 }
@@ -120,8 +120,8 @@ TEST_CASE("vec normalization", "[math]") {
     vec2 a(1.2f, 0.5f);
     vec3 b(1.1f, 0.7f, 2.1f);
 
-    auto res1 = vec::normalize(a);
-    auto res2 = vec::normalize(b);
+    auto res1 = normalize(a);
+    auto res2 = normalize(b);
     REQUIRE(res1 == vec2(0.923f, 0.384f));
     REQUIRE(res2 == vec3(0.445f, 0.283f, 0.849f));
 }

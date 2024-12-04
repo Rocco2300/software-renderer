@@ -3,8 +3,6 @@
 #include <cmath>
 #include <cassert>
 
-namespace vec {
-
 template <typename T, size_t Size>
 vec<T, Size>::vec(const T& x, const T& y) {
     static_assert(Size == 2, "Not a vector 2!");
@@ -118,5 +116,3 @@ vec<T, Size> normalize(const vec<T, Size>& v) {
     auto len = length(v);
     return v / len;
 }
-
-};// namespace vec
