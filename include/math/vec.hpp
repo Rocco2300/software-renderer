@@ -5,10 +5,11 @@
 template <typename T, size_t Size>
 class vec {
 private:
-    T data[4]{};
+    T m_data[4]{};
 
 public:
     vec() = default;
+    vec(const T& value);
     vec(const T& x, const T& y);
     vec(const T& x, const T& y, const T& z);
     vec(const T& x, const T& y, const T& z, const T& w);
@@ -16,6 +17,7 @@ public:
     vec(const __m128& reg);
     operator __m128() const;
 
+    T* data();
     T& operator[](size_t index);
     const T& operator[](size_t index) const;
 

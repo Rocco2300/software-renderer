@@ -4,47 +4,60 @@
 #include <cassert>
 
 template <typename T, size_t Size>
+vec<T, Size>::vec(const T& value) {
+    m_data[0] = value;
+    m_data[1] = value;
+    m_data[2] = value;
+    m_data[3] = value;
+}
+
+template <typename T, size_t Size>
 vec<T, Size>::vec(const T& x, const T& y) {
     static_assert(Size == 2, "Not a vector 2!");
 
-    data[0] = x;
-    data[1] = y;
+    m_data[0] = x;
+    m_data[1] = y;
 }
 
 template <typename T, size_t Size>
 vec<T, Size>::vec(const T& x, const T& y, const T& z) {
     static_assert(Size == 3, "Not a vector 3!");
 
-    data[0] = x;
-    data[1] = y;
-    data[2] = z;
+    m_data[0] = x;
+    m_data[1] = y;
+    m_data[2] = z;
 }
 
 template <typename T, size_t Size>
 vec<T, Size>::vec(const T& x, const T& y, const T& z, const T& w) {
     static_assert(Size == 4, "Not a vector 4!");
 
-    data[0] = x;
-    data[1] = y;
-    data[2] = z;
-    data[3] = w;
+    m_data[0] = x;
+    m_data[1] = y;
+    m_data[2] = z;
+    m_data[3] = w;
 }
 
 template <typename T, size_t Size>
 vec<T, Size>::vec(const __m128& reg) {
-    _mm_store_ps(data, reg);
+    _mm_store_ps(m_data, reg);
 }
 
 template <typename T, size_t Size>
 vec<T, Size>::operator __m128() const {
-    return _mm_load_ps(data);
+    return _mm_load_ps(m_data);
+}
+
+template <typename T, size_t Size>
+T* vec<T, Size>::data() {
+    return &m_data[0];
 }
 
 template <typename T, size_t Size>
 T& vec<T, Size>::operator[](size_t index) {
     assert(index >= 0 && index < Size);
 
-    return data[index];
+    return m_data[index];
 }
 
 // god bless https://stackoverflow.com/questions/6042399/how-to-compare-m128-types
@@ -66,7 +79,7 @@ template <typename T, size_t Size>
 const T& vec<T, Size>::operator[](size_t index) const {
     assert(index >= 0 && index < Size);
 
-    return data[index];
+    return m_data[index];
 }
 
 template <typename T, size_t Size>
