@@ -12,20 +12,20 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 FetchContent_Declare(
-        GLFW
+        glfw
         GIT_REPOSITORY https://github.com/glfw/glfw.git
         GIT_TAG 3.4
 )
-FetchContent_MakeAvailable(GLFW)
+FetchContent_MakeAvailable(glfw)
 
 FetchContent_Declare(
-        GL3W
+        gl3w
         GIT_REPOSITORY https://github.com/skaslev/gl3w.git
 )
-FetchContent_MakeAvailable(GL3W)
+FetchContent_MakeAvailable(gl3w)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
-target_link_libraries(${PROJECT_NAME} GLFW GL3W)
+target_link_libraries(${PROJECT_NAME} glfw gl3w)
 
 enable_testing()
