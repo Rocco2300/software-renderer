@@ -2,6 +2,7 @@
 #include <windows.h>
 
 #include "math/vec.hpp"
+#include "math/mat.hpp"
 
 static bool quit = false;
 
@@ -45,6 +46,19 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, PSTR cmdLine, int
     if (window_handle == nullptr) {
         return -1;
     }
+
+    mat<float, 4> i(1.f);
+    mat<float, 4> a(2.5f);
+    mat<float, 4> b(2.f);
+    auto res1 = a + b;
+    auto res2 = a - b;
+    auto res3 = a * b;
+    i[3][0] = 2;
+    i[3][1] = 3;
+    i[3][2] = 1;
+
+    vec4 v(1.f);
+    auto test = i * v;
 
     while (!quit) {
         static MSG message = {0};
