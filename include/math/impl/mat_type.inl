@@ -1,4 +1,4 @@
-#include "math/mat.hpp"
+#include "mat_type.hpp"
 
 #include <smmintrin.h>
 #include <iostream>
