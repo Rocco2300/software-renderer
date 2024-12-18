@@ -7,8 +7,8 @@ struct vec<T, 2> {
     union {
         storage<T, 2> data{};
         struct {
-            union {T x, r; };
-            union {T y, g; };
+            union {T x, r, u; };
+            union {T y, g, v; };
         };
     };
 

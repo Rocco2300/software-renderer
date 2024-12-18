@@ -7,10 +7,10 @@ struct vec<T, 4> {
     union {
         storage<T, 4> data{};
         struct {
-            union {T x, r; };
-            union {T y, g; };
-            union {T z, b; };
-            union {T w, a; };
+            union {T x, r, u; };
+            union {T y, g, v; };
+            union {T z, b, s; };
+            union {T w, a, t; };
         };
     };
 

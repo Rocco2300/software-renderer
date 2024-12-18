@@ -7,9 +7,9 @@ struct vec<T, 3> {
     union {
         storage<T, 3> data{};
         struct {
-            union {T x, r; };
-            union {T y, g; };
-            union {T z, b; };
+            union {T x, r, u; };
+            union {T y, g, v; };
+            union {T z, b, s; };
         };
     };
 
