@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "math/mat.hpp"
-#include "math/vec_type.hpp"
+#include "math/vec.hpp"
 
 TEST_CASE("2d vec translation", "[math]") {
     mat3 t(1.f);

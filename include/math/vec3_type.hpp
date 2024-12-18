@@ -3,18 +3,19 @@
 #include "vec_type.hpp"
 
 template <typename T>
-struct vec<T, 2> {
+struct vec<T, 3> {
     union {
-        storage<T, 2> data{};
+        storage<T, 3> data{};
         struct {
             union {T x, r; };
             union {T y, g; };
+            union {T z, b; };
         };
     };
 
     vec() = default;
     vec(const T& value);
-    vec(const T& x, const T& y);
+    vec(const T& x, const T& y, const T& z);
     vec(const __m128& reg);
 
     operator T*();
@@ -30,20 +31,20 @@ struct vec<T, 2> {
     //vec2 operator/(float s);
 
     template <typename V>
-    friend bool operator==(const vec<V, 2>& u, const vec<V, 2>& v);
+    friend bool operator==(const vec<V, 3>& u, const vec<V, 3>& v);
     template <typename V>
-    friend bool operator!=(const vec<V, 2>& u, const vec<V, 2>& v);
+    friend bool operator!=(const vec<V, 3>& u, const vec<V, 3>& v);
 
     template <typename V>
-    friend vec<V, 2> operator+(const vec<V, 2>& u, const vec<V, 2>& v);
+    friend vec<V, 3> operator+(const vec<V, 3>& u, const vec<V, 3>& v);
     template <typename V>
-    friend vec<V, 2> operator-(const vec<V, 2>& u, const vec<V, 2>& v);
+    friend vec<V, 3> operator-(const vec<V, 3>& u, const vec<V, 3>& v);
     template <typename V>
-    friend vec<V, 2> operator*(const float& s, const vec<V, 2>& v);
+    friend vec<V, 3> operator*(const float& s, const vec<V, 3>& v);
     template <typename V>
-    friend vec<V, 2> operator*(const vec<V, 2>& v, const float& s);
+    friend vec<V, 3> operator*(const vec<V, 3>& v, const float& s);
     template <typename V>
-    friend vec<V, 2> operator/(const vec<V, 2>& v, const float& s);
+    friend vec<V, 3> operator/(const vec<V, 3>& v, const float& s);
 };
 
-#include "vec2_type.inl"
+#include "vec3_type.inl"

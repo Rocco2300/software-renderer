@@ -1,7 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "math/vec_type.hpp"
-#include "math/vec2_type.hpp"
+#include "math/vec.hpp"
 
 const float Epsilon = 0.001f;
 

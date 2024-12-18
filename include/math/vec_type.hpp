@@ -55,8 +55,10 @@ vec<T, Size> normalize(const vec<T, Size>& v);
 template <typename T>
 struct vec<T, 2>;
 
-using vec2 = vec<float, 2>;
-using vec3 = vec<float, 3>;
-using vec4 = vec<float, 4>;
+template <typename T>
+struct vec<T, 3>;
+
+template <typename T>
+struct vec<T, 4>;
 
 #include "vec_type.inl"
