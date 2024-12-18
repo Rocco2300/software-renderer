@@ -17,18 +17,20 @@ struct vec<T, 3> {
     vec(const T& value);
     vec(const T& x, const T& y, const T& z);
     vec(const __m128& reg);
+    vec(const vec<T, 3>& other);
+
+    vec<T, 3>& operator=(const vec<T, 3>& other);
 
     operator T*();
     operator __m128() const;
 
-    //T* data();
     T& operator[](size_t index);
     const T& operator[](size_t index) const;
 
-    //vec2 operator+(vec2 v);
-    //vec2 operator-(vec2 v);
-    //vec2 operator*(float s);
-    //vec2 operator/(float s);
+    vec<T, 3>& operator+=(const vec<T, 3>& v);
+    vec<T, 3>& operator-=(const vec<T, 3>& v);
+    vec<T, 3>& operator*=(float s);
+    vec<T, 3>& operator/=(float s);
 
     template <typename V>
     friend bool operator==(const vec<V, 3>& u, const vec<V, 3>& v);

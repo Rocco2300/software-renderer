@@ -44,6 +44,17 @@ vec<T, Size>::vec(const __m128& reg) {
 }
 
 template <typename T, size_t Size>
+vec<T, Size>::vec(const vec<T, Size>& other) {
+    this->data = other.data;
+}
+
+template <typename T, size_t Size>
+vec<T, Size>& vec<T, Size>::operator=(const vec<T, Size>& other) {
+    this->data = other.data;
+    return *this;
+}
+
+template <typename T, size_t Size>
 vec<T, Size>::operator T*() {
     return data;
 }

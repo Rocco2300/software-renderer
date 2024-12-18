@@ -23,6 +23,17 @@ vec<T, 3>::vec(const __m128& reg) {
 }
 
 template <typename T>
+vec<T, 3>::vec(const vec<T, 3>& other) {
+    this->data = other.data;
+}
+
+template <typename T>
+vec<T, 3>& vec<T, 3>::operator=(const vec<T, 3>& other) {
+    this->data = other.data;
+    return *this;
+}
+
+template <typename T>
 vec<T, 3>::operator T*() {
     return data;
 }
@@ -35,6 +46,30 @@ vec<T, 3>::operator __m128() const {
 template <typename T>
 T& vec<T, 3>::operator[](size_t index) {
     return data[index];
+}
+
+template <typename T>
+vec<T, 3>& vec<T, 3>::operator+=(const vec<T, 3>& v) {
+    *this = *this + v;
+    return *this;
+}
+
+template <typename T>
+vec<T, 3>& vec<T, 3>::operator-=(const vec<T, 3>& v) {
+    *this = *this - v;
+    return *this;
+}
+
+template <typename T>
+vec<T, 3>& vec<T, 3>::operator*=(float s) {
+    *this = *this * s;
+    return *this;
+}
+
+template <typename T>
+vec<T, 3>& vec<T, 3>::operator/=(float s) {
+    *this = *this / s;
+    return *this;
 }
 
 // god bless https://stackoverflow.com/questions/6042399/how-to-compare-m128-types

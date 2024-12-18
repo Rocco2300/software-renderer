@@ -142,10 +142,6 @@ int main() {
         return -1;
     }
 
-    //vec2 a(1.f);
-    //vec2 b(2.f);
-    //a += b;
-
     auto program = createShaderProgram("screen.vert", "screen.frag");
 
     unsigned int VAO, VBO;

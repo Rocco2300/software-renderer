@@ -20,6 +20,23 @@ storage<T, Size>::storage(const __m128& reg) {
 }
 
 template <typename T, size_t Size>
+storage<T, Size>::storage(const storage<T, Size>& other) {
+    this->data[0] = other.data[0];
+    this->data[1] = other.data[1];
+    this->data[2] = other.data[2];
+    this->data[3] = other.data[3];
+}
+
+template <typename T, size_t Size>
+storage<T, Size>& storage<T, Size>::operator=(const storage<T, Size>& other) {
+    this->data[0] = other.data[0];
+    this->data[1] = other.data[1];
+    this->data[2] = other.data[2];
+    this->data[3] = other.data[3];
+    return *this;
+}
+
+template <typename T, size_t Size>
 storage<T, Size>::operator T*() {
     return data;
 }

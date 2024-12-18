@@ -9,6 +9,9 @@ struct storage {
     template <typename... Args>
     storage(Args&&... args);
     storage(const __m128& reg);
+    storage(const storage<T, Size>& other);
+
+    storage<T, Size>& operator=(const storage<T, Size>& other);
 
     operator T*();
     operator __m128() const;

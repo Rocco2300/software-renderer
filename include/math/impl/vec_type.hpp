@@ -13,6 +13,9 @@ struct vec {
     vec(const T& x, const T& y, const T& z);
     vec(const T& x, const T& y, const T& z, const T& w);
     vec(const __m128& reg);
+    vec(const vec<T, Size>& other);
+
+    vec<T, Size>& operator=(const vec<T, Size>& other);
 
     operator T*();
     operator __m128() const;
