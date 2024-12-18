@@ -1,6 +1,7 @@
 #include "math/mat.hpp"
 
 #include <smmintrin.h>
+#include <iostream>
 
 template <typename T, size_t Size>
 mat<T, Size>::mat(const T& diag) {
@@ -92,7 +93,7 @@ vec<T, Size> operator*(const mat<T, Size>& m, const vec<T, Size>& v) {
             _mm_add_ps(_mm_mul_ps(brod1, row1), _mm_mul_ps(brod2, row2)),
             _mm_add_ps(_mm_mul_ps(brod3, row3), _mm_mul_ps(brod4, row4))
     );
-    _mm_store_ps(result.data(), row);
+    _mm_store_ps(result.data, row);
 
     return result;
 }

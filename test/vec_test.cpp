@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "math/vec.hpp"
+#include "math/vec_type.hpp"
+#include "math/vec2_type.hpp"
 
 const float Epsilon = 0.001f;
 
@@ -117,11 +118,13 @@ TEST_CASE("vec length", "[math]") {
 }
 
 TEST_CASE("vec normalization", "[math]") {
-    vec2 a(1.2f, 0.5f);
+    vec2 a(1.0f, 1.0f);
     vec3 b(1.1f, 0.7f, 2.1f);
 
     auto res1 = normalize(a);
     auto res2 = normalize(b);
-    REQUIRE(res1 == vec2(0.923f, 0.384f));
-    REQUIRE(res2 == vec3(0.445f, 0.283f, 0.849f));
+    auto baseline1 = vec2(0.707f, 0.707f);
+    auto baseline2 = vec3(0.445f, 0.283f, 0.849f);
+    REQUIRE(res1 == baseline1);
+    REQUIRE(res2 == baseline2);
 }

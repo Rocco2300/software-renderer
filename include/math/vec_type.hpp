@@ -1,23 +1,23 @@
 #pragma once
 
-#include <smmintrin.h>
+#include "storage.hpp"
 
 template <typename T, size_t Size>
-class vec {
-private:
-    T m_data[4]{};
+struct vec {
+    //T m_data[4]{};
+    storage<T, Size> data{};
 
-public:
     vec() = default;
     vec(const T& value);
     vec(const T& x, const T& y);
     vec(const T& x, const T& y, const T& z);
     vec(const T& x, const T& y, const T& z, const T& w);
-
     vec(const __m128& reg);
+
+    operator T*();
     operator __m128() const;
 
-    T* data();
+    //T* data();
     T& operator[](size_t index);
     const T& operator[](size_t index) const;
 
@@ -52,8 +52,11 @@ float dot(const vec<T, Size>& u, const vec<T, Size>& v);
 template <typename T, size_t Size>
 vec<T, Size> normalize(const vec<T, Size>& v);
 
+template <typename T>
+struct vec<T, 2>;
+
 using vec2 = vec<float, 2>;
 using vec3 = vec<float, 3>;
 using vec4 = vec<float, 4>;
 
-#include "vec.inl"
+#include "vec_type.inl"
