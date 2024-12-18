@@ -1,4 +1,4 @@
-#include "math/vec_type.hpp"
+#include "vec_type.hpp"
 
 #include <cmath>
 #include <cassert>

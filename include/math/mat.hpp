@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vec_type.hpp"
+#include "impl/vec_type.hpp"
 
 template <typename T, size_t Size>
 class mat {

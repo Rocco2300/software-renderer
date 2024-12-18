@@ -6,7 +6,7 @@
 #include <string>
 #include <cstring>
 
-#include "math/vec2_type.hpp"
+#include "math/vec.hpp"
 
 constexpr int WindowWidth = 1280;
 constexpr int WindowHeight = WindowWidth * (9.0f / 16.f);
