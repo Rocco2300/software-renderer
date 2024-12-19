@@ -4,13 +4,15 @@
 
 template <typename T, size_t Size>
 struct storage {
-    T data[4]{};
+    T data[Size]{};
 
-    template <typename... Args>
-    storage(Args&&... args);
+    //template <typename... Args>
+    //storage(Args&&... args);
+    storage() = default;
     storage(const __m128& reg);
     storage(const storage<T, Size>& other);
 
+    storage<T, Size>& operator=(const __m128& reg);
     storage<T, Size>& operator=(const storage<T, Size>& other);
 
     operator T*();

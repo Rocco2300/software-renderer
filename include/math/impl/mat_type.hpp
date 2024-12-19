@@ -1,19 +1,22 @@
 #pragma once
 
-#include "vec_type.hpp"
+#include "storage.hpp"
+
+template <typename T, size_t Size>
+struct vec;
 
 template <typename T, size_t Size>
 class mat {
 private:
-    T data[4][4]{};
+    //T data[4][4]{};
+    storage<T, Size> data[Size];
 
 public:
     mat() = default;
     mat(const T& diag);
-    mat(const T (&data)[4][4]);
 
-    T* operator[](size_t index);
-    const T* operator[](size_t index) const;
+    storage<T, Size>& operator[](size_t index);
+    const storage<T, Size>& operator[](size_t index) const;
 
     template <typename V, size_t VSize>
     friend mat<V, VSize> operator+(const mat<V, VSize>& a, const mat<V, VSize>& b);

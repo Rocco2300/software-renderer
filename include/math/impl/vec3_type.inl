@@ -19,7 +19,7 @@ vec<T, 3>::vec(const T& x, const T& y, const T& z) {
 
 template <typename T>
 vec<T, 3>::vec(const __m128& reg) {
-    _mm_store_ps(data, reg);
+    data = storage<T, 3>(reg);
 }
 
 template <typename T>

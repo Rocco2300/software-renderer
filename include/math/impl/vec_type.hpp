@@ -4,7 +4,6 @@
 
 template <typename T, size_t Size>
 struct vec {
-    //T m_data[4]{};
     storage<T, Size> data{};
 
     vec() = default;
@@ -20,14 +19,13 @@ struct vec {
     operator T*();
     operator __m128() const;
 
-    //T* data();
     T& operator[](size_t index);
     const T& operator[](size_t index) const;
 
-    //vec2 operator+(vec2 v);
-    //vec2 operator-(vec2 v);
-    //vec2 operator*(float s);
-    //vec2 operator/(float s);
+    vec<T, Size>& operator+=(const vec<T, Size>& v);
+    vec<T, Size>& operator-=(const vec<T, Size>& v);
+    vec<T, Size>& operator*=(float s);
+    vec<T, Size>& operator/=(float s);
 
     template <typename V, size_t VSize>
     friend bool operator==(const vec<V, VSize>& u, const vec<V, VSize>& v);
