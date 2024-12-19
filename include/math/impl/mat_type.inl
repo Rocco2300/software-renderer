@@ -53,22 +53,23 @@ mat<T, Size> operator*(const mat<T, Size>& a, const mat<T, Size>& b) {
         row[i] = a[i];
     }
 
-    __m128 brod[4];
     for (int i = 0; i < 4; i++) {
+        __m128 brod[4];
         if (i >= Size) {
             brod[i] = _mm_set1_ps(0);
-            continue;
         }
-        brod[i] = _mm_set1_ps(b[0][i]);
-    }
+        else {
+            brod[i] = _mm_set1_ps(b[0][i]);
+        }
 
-    for (int i = 0; i < 4; i++) {
         auto currRow = _mm_add_ps(
                 _mm_add_ps(_mm_mul_ps(brod[0], row[0]), _mm_mul_ps(brod[1], row[1])),
                 _mm_add_ps(_mm_mul_ps(brod[2], row[2]), _mm_mul_ps(brod[3], row[3]))
         );
 
-        result.data[i] = currRow;
+        if (i < Size) {
+            result[i] = currRow;
+        }
     }
     return result;
 }
@@ -104,7 +105,7 @@ vec<T, Size> operator*(const mat<T, Size>& m, const vec<T, Size>& v) {
     float buffer[4];
     _mm_store_ps(buffer, regRes);
     for (int i = 0; i < Size; i++) {
-        result.data[i] = buffer[i];
+        result[i] = buffer[i];
     }
 
     return result;
