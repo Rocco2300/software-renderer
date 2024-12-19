@@ -23,6 +23,12 @@ const storage<T, Size>& mat<T, Size>::operator[](size_t index) const {
 }
 
 template <typename T, size_t Size>
+mat<T, Size>& mat<T, Size>::operator*=(const mat<T, Size>& other) {
+    *this = *this * other;
+    return *this;
+}
+
+template <typename T, size_t Size>
 mat<T, Size> operator+(const mat<T, Size>& a, const mat<T, Size>& b) {
     mat<T, Size> result;
     for (int i = 0; i < Size; i++) {
