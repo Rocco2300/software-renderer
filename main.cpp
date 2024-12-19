@@ -1,10 +1,13 @@
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <thread>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <cstring>
+
+#include "math/vec.hpp"
 
 constexpr int WindowWidth = 1280;
 constexpr int WindowHeight = WindowWidth * (9.0f / 16.f);
@@ -121,6 +124,7 @@ void updateTexture(unsigned int texture, unsigned int pbo, int width, int height
 }
 
 int main() {
+    std::cout << std::thread::hardware_concurrency() << '\n';
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW\n";
         return -1;
