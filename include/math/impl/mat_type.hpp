@@ -6,7 +6,7 @@ template <typename T, size_t Size>
 struct vec;
 
 template <typename T, size_t Size>
-class mat {
+struct mat {
 private:
     //T data[4][4]{};
     storage<T, Size> data[Size];
@@ -14,6 +14,7 @@ private:
 public:
     mat() = default;
     mat(const T& diag);
+    mat(const vec<T, 2>& v1, const vec<T, 2>& v2, const vec<T, 2>& v3);
 
     storage<T, Size>& operator[](size_t index);
     const storage<T, Size>& operator[](size_t index) const;
@@ -29,5 +30,8 @@ public:
     template <typename V, size_t VSize>
     friend vec<V, VSize> operator*(const mat<V, VSize>& m, const vec<V, VSize>& v);
 };
+
+template <typename T>
+T det(mat<T, 3> m);
 
 #include "mat_type.inl"

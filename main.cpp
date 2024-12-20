@@ -8,6 +8,7 @@
 #include <cstring>
 
 #include "math/vec.hpp"
+#include "math/mat.hpp"
 
 constexpr int WindowWidth = 1280;
 constexpr int WindowHeight = WindowWidth * (9.0f / 16.f);
@@ -187,11 +188,8 @@ int main() {
         }
     }
     auto triangleArea = [](const vec2& p1, const vec2& p2, const vec2& p3) {
-        auto s1 = length(p1 - p2);
-        auto s2 = length(p2 - p3);
-        auto s3 = length(p3 - p1);
-        auto s = (s1 + s2 + s3) / 2;
-        return std::sqrt(s * (s - s1) * (s - s2) * (s - s3));
+        auto mat = mat3(p1, p2, p3);
+        return 0.5f * std::abs(det(mat));
     };
 
     auto& v1 = triangleVertices[0];
@@ -209,7 +207,7 @@ int main() {
             auto subArea2 = triangleArea(v1, p, v3);
             auto subArea3 = triangleArea(v1, v2, p);
 
-            if (std::abs(area - (subArea1 + subArea2 + subArea3)) < 12.f) {
+            if (std::abs(area - (subArea1 + subArea2 + subArea3)) < 0.001f) {
                 int index = (y * WindowWidth + x) * 3;
                 data[index + 0] = 255;
                 data[index + 1] = 255;
@@ -217,10 +215,26 @@ int main() {
             }
         }
     }
+    updateTexture(texture, pbo, WindowWidth, WindowHeight, data);
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
 
+        for (int y = bottom; y <= top; y++) {
+            for (int x = left; x <= right; x++) {
+                auto p = vec2(x, y);
+                auto subArea1 = triangleArea(p, v2, v3);
+                auto subArea2 = triangleArea(v1, p, v3);
+                auto subArea3 = triangleArea(v1, v2, p);
+
+                if (std::abs(area - (subArea1 + subArea2 + subArea3)) < 0.001f) {
+                    int index = (y * WindowWidth + x) * 3;
+                    data[index + 0] = 255;
+                    data[index + 1] = 255;
+                    data[index + 2] = 255;
+                }
+            }
+        }
         updateTexture(texture, pbo, WindowWidth, WindowHeight, data);
 
         glUseProgram(program);
