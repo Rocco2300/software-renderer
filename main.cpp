@@ -18,6 +18,12 @@ const float vertices[] = {
         -1.0f,  3.0f
 };
 
+const vec2 triangleVertices[] = {
+        {640 - 100, 360 - 200},
+        {640 + 100, 360 - 200},
+        {640, 360 + 100}
+};
+
 std::string loadShaderSource(const std::string& fileName) {
     std::string path = "C:\\Users\\grigo\\Repos\\software-renderer\\shader\\";
     path += fileName;
@@ -81,12 +87,21 @@ unsigned int createTexture(int width, int height) {
     glBindTexture(GL_TEXTURE_2D, texture);
 
     unsigned char* data = new unsigned char[width * height * 3];
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
+    // UV texture test
+    //for (int y = 0; y < height; ++y) {
+    //    for (int x = 0; x < width; ++x) {
+    //        int index = (y * width + x) * 3;
+    //        data[index + 0] = (int)(((float)x / (float)width) * 255);
+    //        data[index + 1] = (int)(((float)y / (float)height) * 255);
+    //        data[index + 2] = 50;
+    //    }
+    //}
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
             int index = (y * width + x) * 3;
-            data[index + 0] = (int)(((float)x / (float)width) * 255);
-            data[index + 1] = (int)(((float)y / (float)height) * 255);
-            data[index + 2] = 50;
+            data[index + 0] = 0;
+            data[index + 1] = 0;
+            data[index + 2] = 0;
         }
     }
 
@@ -124,7 +139,6 @@ void updateTexture(unsigned int texture, unsigned int pbo, int width, int height
 }
 
 int main() {
-    std::cout << std::thread::hardware_concurrency() << '\n';
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW\n";
         return -1;
@@ -164,9 +178,43 @@ int main() {
     for (int y = 0; y < WindowHeight; ++y) {
         for (int x = 0; x < WindowWidth; ++x) {
             int index = (y * WindowWidth + x) * 3;
-            data[index + 0] = (int)(((float)x / (float)WindowWidth) * 255);
-            data[index + 1] = (int)(((float)y / (float)WindowHeight) * 255);
-            data[index + 2] = 50;
+            //data[index + 0] = (int)(((float)x / (float)WindowWidth) * 255);
+            //data[index + 1] = (int)(((float)y / (float)WindowHeight) * 255);
+            //data[index + 2] = 50;
+            data[index + 0] = 0;
+            data[index + 1] = 0;
+            data[index + 2] = 0;
+        }
+    }
+    auto triangleArea = [](const vec2& p1, const vec2& p2, const vec2& p3) {
+        auto s1 = length(p1 - p2);
+        auto s2 = length(p2 - p3);
+        auto s3 = length(p3 - p1);
+        auto s = (s1 + s2 + s3) / 2;
+        return std::sqrt(s * (s - s1) * (s - s2) * (s - s3));
+    };
+
+    auto& v1 = triangleVertices[0];
+    auto& v2 = triangleVertices[1];
+    auto& v3 = triangleVertices[2];
+    auto area = triangleArea(v1, v2, v3);
+    auto left = std::min(std::min(v1.x, v2.x), v3.x);
+    auto bottom = std::min(std::min(v1.y, v2.y), v3.y);
+    auto top = std::max(std::max(v1.y, v2.y), v3.y);
+    auto right = std::max(std::max(v1.x, v2.x), v3.x);
+    for (int y = bottom; y <= top; y++) {
+        for (int x = left; x <= right; x++) {
+            auto p = vec2(x, y);
+            auto subArea1 = triangleArea(p, v2, v3);
+            auto subArea2 = triangleArea(v1, p, v3);
+            auto subArea3 = triangleArea(v1, v2, p);
+
+            if (std::abs(area - (subArea1 + subArea2 + subArea3)) < 12.f) {
+                int index = (y * WindowWidth + x) * 3;
+                data[index + 0] = 255;
+                data[index + 1] = 255;
+                data[index + 2] = 255;
+            }
         }
     }
 
