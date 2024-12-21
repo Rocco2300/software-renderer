@@ -1,7 +1,7 @@
 #include "mat_type.hpp"
 
-#include <smmintrin.h>
 #include <iostream>
+#include <smmintrin.h>
 
 template <typename T, size_t Size>
 mat<T, Size>::mat(const T& diag) {
@@ -74,11 +74,12 @@ mat<T, Size> operator*(const mat<T, Size>& a, const mat<T, Size>& b) {
 
     for (int i = 0; i < 4; i++) {
         __m128 brod[4];
-        if (i >= Size) {
-            brod[i] = _mm_set1_ps(0);
-        }
-        else {
-            brod[i] = _mm_set1_ps(b[0][i]);
+        for (int j = 0; j < 4; j++) {
+            if (i >= Size) {
+                brod[j] = _mm_set1_ps(0);
+            } else {
+                brod[j] = _mm_set1_ps(b[j][i]);
+            }
         }
 
         auto currRow = _mm_add_ps(
