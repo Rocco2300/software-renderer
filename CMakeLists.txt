@@ -28,6 +28,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(gl3w)
 
+file(GLOB SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB INCL ${PROJECT_SOURCE_DIR}/include/math/*)
 file(GLOB IMPL ${PROJECT_SOURCE_DIR}/include/math/impl/*)
 
@@ -48,9 +49,11 @@ target_link_libraries(mat_test Catch2::Catch2WithMain)
 add_test(NAME vec_test COMMAND vec_test)
 add_test(NAME mat_test COMMAND mat_test)
 
-add_executable(${PROJECT_NAME} main.cpp ${INCL} ${IMPL})
+add_subdirectory(${PROJECT_SOURCE_DIR}/src)
+
+add_executable(${PROJECT_NAME} main.cpp ${SRC} ${INCL} ${IMPL})
 add_dependencies(${PROJECT_NAME} vec_test mat_test)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
-target_link_libraries(${PROJECT_NAME} glfw gl3w)
+target_link_libraries(${PROJECT_NAME} glfw gl3w src)

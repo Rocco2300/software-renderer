@@ -21,6 +21,12 @@ vec<T, 2>::vec(const vec<T, 2>& other) {
 }
 
 template <typename T>
+vec<T, 2>::vec(const vec<T, 4>& other) {
+    this->data[0] = other.data[0];
+    this->data[1] = other.data[1];
+}
+
+template <typename T>
 vec<T, 2>::vec(const __m128& reg) {
     data = storage<T, 2>(reg);
 }

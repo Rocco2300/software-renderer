@@ -17,6 +17,7 @@ struct vec<T, 2> {
     vec(const T& x, const T& y);
     vec(const __m128& reg);
     vec(const vec<T, 2>& other);
+    vec(const vec<T, 4>& other);
 
     vec<T, 2>& operator=(const vec<T, 2>& other);
 

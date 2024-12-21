@@ -1,259 +1,108 @@
-#include <GL/gl3w.h>
-#include <GLFW/glfw3.h>
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <cstring>
-
-#include "math/vec.hpp"
+// clang-format off
+#include "window.hpp"
 #include "math/mat.hpp"
+#include "math/vec.hpp"
+#include "math/transform.hpp"
 
-constexpr int WindowWidth = 1280;
+#include <vector>
+
+constexpr int WindowWidth  = 1280;
 constexpr int WindowHeight = WindowWidth * (9.0f / 16.f);
 
-const float vertices[] = {
-        -1.0f, -1.0f,
-        3.0f, -1.0f,
-        -1.0f,  3.0f
+const std::vector<vec2> triangleVertices = {
+    {6.0f, 3.0f},
+    {10.f, 3.0f},
+    {8.f, 7.f},
+    {12.f, 7.f},
+    {4.f, 7.f}
 };
 
-const vec2 triangleVertices[] = {
-        {640 - 100, 360 - 200},
-        {640 + 100, 360 - 200},
-        {640, 360 + 100}
+const std::vector<int> triangleIndices = {
+    0, 1, 2,
+    1, 2, 3,
+    0, 2, 4
 };
 
-std::string loadShaderSource(const std::string& fileName) {
-    std::string path = "C:\\Users\\grigo\\Repos\\software-renderer\\shader\\";
-    path += fileName;
+const std::vector<u8> triangleColors = {
+    255, 0, 0,
+    0, 255, 0,
+    0, 0, 255
+};
+// clang-format on
 
-    std::ifstream in(path);
-    std::stringstream fileData;
-    fileData << in.rdbuf();
-
-    return fileData.str();
+float triangleArea(const vec2& v1, const vec2& v2, const vec2& v3) {
+    auto mat = mat3(v1, v2, v3);
+    return 0.5f * std::abs(det(mat));
 }
 
-GLuint compileShader(GLenum shaderType, const std::string& source) {
-    auto shader = glCreateShader(shaderType);
-    const char* sourceCStr = source.c_str();
-    glShaderSource(shader, 1, &sourceCStr, nullptr);
-    glCompileShader(shader);
-
-    int compileStatus;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &compileStatus);
-    if (compileStatus != GL_TRUE) {
-        char log[512];
-        glGetShaderInfoLog(shader, 512, nullptr, log);
-        std::cerr << "Shader compilation failed:\n" << log << "\n";
-    }
-
-    return shader;
-}
-
-unsigned int createShaderProgram(const std::string& vertexPath, const std::string& fragmentPath) {
-    std::string vertexSource = loadShaderSource(vertexPath);
-    std::string fragmentSource = loadShaderSource(fragmentPath);
-    if (vertexSource.empty() || fragmentSource.empty()) {
-        return 0;
-    }
-
-    auto vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource);
-    auto fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
-
-    auto program = glCreateProgram();
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    glLinkProgram(program);
-
-    int linkStatus;
-    glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
-    if (linkStatus != GL_TRUE) {
-        char log[512];
-        glGetProgramInfoLog(program, 512, nullptr, log);
-        std::cerr << "Program linking failed:\n" << log << "\n";
-    }
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    return program;
-}
-
-unsigned int createTexture(int width, int height) {
-    unsigned int texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    unsigned char* data = new unsigned char[width * height * 3];
-    // UV texture test
-    //for (int y = 0; y < height; ++y) {
-    //    for (int x = 0; x < width; ++x) {
-    //        int index = (y * width + x) * 3;
-    //        data[index + 0] = (int)(((float)x / (float)width) * 255);
-    //        data[index + 1] = (int)(((float)y / (float)height) * 255);
-    //        data[index + 2] = 50;
-    //    }
-    //}
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int index = (y * width + x) * 3;
-            data[index + 0] = 0;
-            data[index + 1] = 0;
-            data[index + 2] = 0;
-        }
-    }
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    delete[] data;
-    return texture;
-}
-
-unsigned int createPBO(int width, int height) {
-    unsigned int pbo;
-    glGenBuffers(1, &pbo);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo);
-    glBufferData(GL_PIXEL_UNPACK_BUFFER, width * height * 3, nullptr, GL_STREAM_DRAW);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    return pbo;
-}
-
-void updateTexture(unsigned int texture, unsigned int pbo, int width, int height, const void* data) {
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo);
-    void* buffer = glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
-    if (buffer) {
-        std::memcpy(buffer, data, width * height * 3);
-        glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
-    }
-
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-int main() {
-    if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW\n";
-        return -1;
-    }
-
-    GLFWwindow* window = glfwCreateWindow(WindowWidth, WindowHeight, "OpenGL Window", NULL, NULL);
-    if (!window) {
-        std::cerr << "Failed to create GLFW window\n";
-        glfwTerminate();
-        return -1;
-    }
-
-    glfwMakeContextCurrent(window);
-
-    if (gl3wInit()) {
-        std::cerr << "Failed to initialize GL3W\n";
-        return -1;
-    }
-
-    auto program = createShaderProgram("screen.vert", "screen.frag");
-
-    unsigned int VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    unsigned int pbo = createPBO(WindowWidth, WindowHeight);
-    auto texture = createTexture(WindowWidth, WindowHeight);
-
-    unsigned char* data = new unsigned char[WindowWidth * WindowHeight * 3];
-    for (int y = 0; y < WindowHeight; ++y) {
-        for (int x = 0; x < WindowWidth; ++x) {
-            int index = (y * WindowWidth + x) * 3;
-            //data[index + 0] = (int)(((float)x / (float)WindowWidth) * 255);
-            //data[index + 1] = (int)(((float)y / (float)WindowHeight) * 255);
-            //data[index + 2] = 50;
-            data[index + 0] = 0;
-            data[index + 1] = 0;
-            data[index + 2] = 0;
-        }
-    }
-    auto triangleArea = [](const vec2& p1, const vec2& p2, const vec2& p3) {
-        auto mat = mat3(p1, p2, p3);
-        return 0.5f * std::abs(det(mat));
-    };
-
-    auto& v1 = triangleVertices[0];
-    auto& v2 = triangleVertices[1];
-    auto& v3 = triangleVertices[2];
-    auto area = triangleArea(v1, v2, v3);
-    auto left = std::min(std::min(v1.x, v2.x), v3.x);
-    auto bottom = std::min(std::min(v1.y, v2.y), v3.y);
-    auto top = std::max(std::max(v1.y, v2.y), v3.y);
-    auto right = std::max(std::max(v1.x, v2.x), v3.x);
-    for (int y = bottom; y <= top; y++) {
-        for (int x = left; x <= right; x++) {
-            auto p = vec2(x, y);
-            auto subArea1 = triangleArea(p, v2, v3);
-            auto subArea2 = triangleArea(v1, p, v3);
-            auto subArea3 = triangleArea(v1, v2, p);
-
-            if (std::abs(area - (subArea1 + subArea2 + subArea3)) < 0.001f) {
-                int index = (y * WindowWidth + x) * 3;
-                data[index + 0] = 255;
-                data[index + 1] = 255;
-                data[index + 2] = 255;
-            }
-        }
-    }
-    updateTexture(texture, pbo, WindowWidth, WindowHeight, data);
-
-    while (!glfwWindowShouldClose(window)) {
-        glClear(GL_COLOR_BUFFER_BIT);
-
+void raster(
+        sfr::window::window_data& window,
+        const std::vector<vec2>& vertices,
+        const std::vector<int>& indices
+) {
+    for (int i = 0; i < indices.size(); i += 3) {
+        auto& v1    = vertices[indices[i + 0]];
+        auto& v2    = vertices[indices[i + 1]];
+        auto& v3    = vertices[indices[i + 2]];
+        auto area   = triangleArea(v1, v2, v3);
+        auto left   = std::min(std::min(v1.x, v2.x), v3.x);
+        auto bottom = std::min(std::min(v1.y, v2.y), v3.y);
+        auto top    = std::max(std::max(v1.y, v2.y), v3.y);
+        auto right  = std::max(std::max(v1.x, v2.x), v3.x);
         for (int y = bottom; y <= top; y++) {
             for (int x = left; x <= right; x++) {
-                auto p = vec2(x, y);
+                auto p        = vec2(x, y);
                 auto subArea1 = triangleArea(p, v2, v3);
                 auto subArea2 = triangleArea(v1, p, v3);
                 auto subArea3 = triangleArea(v1, v2, p);
 
                 if (std::abs(area - (subArea1 + subArea2 + subArea3)) < 0.001f) {
-                    int index = (y * WindowWidth + x) * 3;
-                    data[index + 0] = 255;
-                    data[index + 1] = 255;
-                    data[index + 2] = 255;
+                    sfr::window::setPixel(
+                            window,
+                            x,
+                            y,
+                            triangleColors[i + 0],
+                            triangleColors[i + 1],
+                            triangleColors[i + 2]
+                    );
                 }
             }
         }
-        updateTexture(texture, pbo, WindowWidth, WindowHeight, data);
+    }
+}
 
-        glUseProgram(program);
+std::vector<vec2> viewportTransform(
+        const logic_space& logicSpace,
+        const viewport_space& viewportSpace,
+        const std::vector<vec2>& vertices
+) {
+    auto viewportTransform = viewport(logicSpace, viewportSpace);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
-
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+    std::vector<vec2> ret(vertices.size());
+    for (int i = 0; i < vertices.size(); i++) {
+        auto v = vec4(vertices[i]);
+        ret[i] = vec2(viewportTransform * v);
     }
 
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteProgram(program);
-    glDeleteTextures(1, &texture);
-    glfwTerminate();
+    return ret;
+}
 
+int main() {
+    auto window = sfr::window::init(WindowWidth, WindowHeight);
+
+    logic_space logicSpace{0, 0, 16, 9};
+    viewport_space viewportSpace{0, 0, 1280, 720};
+
+    auto newVerts = viewportTransform(logicSpace, viewportSpace, triangleVertices);
+
+    raster(window, newVerts, triangleIndices);
+    sfr::window::blitPixels(window);
+
+    while (!sfr::window::shouldClose(window)) {
+        sfr::window::blitPixels(window);
+        sfr::window::display(window);
+    }
+
+    sfr::window::destroy(window);
     return 0;
 }
