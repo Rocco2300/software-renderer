@@ -16,13 +16,6 @@ const std::vector<vec3> triangleVertices = {
     {-0.5, 0.5, 0}
 };
 
-//const std::vector<vec3> triangleVertices = {
-//    {0.5, 0.5, 0},
-//    {1.5, 0.5, 0},
-//    {1.5, 1.5, 0},
-//    {0.5, 1.5, 0}
-//};
-
 const std::vector<int> triangleIndices = {
     0, 1, 2,
     2, 3, 0

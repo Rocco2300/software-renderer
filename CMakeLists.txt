@@ -3,11 +3,16 @@ cmake_minimum_required(VERSION 3.23)
 project(software-renderer)
 
 set(CMAKE_CXX_STANDARD 20)
+set(TEST_DIR ${CMAKE_SOURCE_DIR}/test)
+set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/software-renderer)
 
 add_compile_options(-msse4.1)
 
-include(FetchContent)
+file(GLOB SRC ${SOURCE_DIR}/src/*.cpp)
+file(GLOB INCL ${SOURCE_DIR}/include/math/*)
+file(GLOB IMPL ${SOURCE_DIR}/include/math/impl/*)
 
+include(FetchContent)
 FetchContent_Declare(
         Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
@@ -28,32 +33,5 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(gl3w)
 
-file(GLOB SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)
-file(GLOB INCL ${PROJECT_SOURCE_DIR}/include/math/*)
-file(GLOB IMPL ${PROJECT_SOURCE_DIR}/include/math/impl/*)
-
-enable_testing()
-
-add_executable(vec_test test/vec_test.cpp ${IMPL} ${INCL})
-
-target_include_directories(vec_test PUBLIC ${PROJECT_SOURCE_DIR}/include)
-
-target_link_libraries(vec_test Catch2::Catch2WithMain)
-
-add_executable(mat_test test/mat_test.cpp ${IMPL} ${INCL})
-
-target_include_directories(mat_test PUBLIC ${PROJECT_SOURCE_DIR}/include)
-
-target_link_libraries(mat_test Catch2::Catch2WithMain)
-
-add_test(NAME vec_test COMMAND vec_test)
-add_test(NAME mat_test COMMAND mat_test)
-
-add_subdirectory(${PROJECT_SOURCE_DIR}/src)
-
-add_executable(${PROJECT_NAME} main.cpp ${SRC} ${INCL} ${IMPL})
-add_dependencies(${PROJECT_NAME} vec_test mat_test)
-
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
-
-target_link_libraries(${PROJECT_NAME} glfw gl3w src)
+add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+add_subdirectory(${PROJECT_SOURCE_DIR}/software-renderer)

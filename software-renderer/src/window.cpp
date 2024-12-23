@@ -15,7 +15,7 @@
 constexpr float vertices[] = {-1.0f, -1.0f, 3.0f, -1.0f, -1.0f, 3.0f};
 
 static std::string loadShaderSource(const std::string& fileName) {
-    std::string path = "C:\\Users\\grigo\\Repos\\software-renderer\\shader\\";
+    std::string path = R"(C:\Users\grigo\Repos\software-renderer\software-renderer\shader\)";
     path += fileName;
 
     std::ifstream in(path);
@@ -25,7 +25,7 @@ static std::string loadShaderSource(const std::string& fileName) {
     return fileData.str();
 }
 
-static i32 compileShader(i32 shaderType, const std::string& source) {
+static u32 compileShader(i32 shaderType, const std::string& source) {
     auto shader            = glCreateShader(shaderType);
     const char* sourceCStr = source.c_str();
     glShaderSource(shader, 1, &sourceCStr, nullptr);
