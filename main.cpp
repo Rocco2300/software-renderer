@@ -9,18 +9,23 @@
 constexpr int WindowWidth  = 1280;
 constexpr int WindowHeight = WindowWidth * (9.0f / 16.f);
 
-const std::vector<vec2> triangleVertices = {
-    {6.0f, 3.0f},
-    {10.f, 3.0f},
-    {8.f, 7.f},
-    {12.f, 7.f},
-    {4.f, 7.f}
+const std::vector<vec3> triangleVertices = {
+    {-0.5, -0.5, 0},
+    {0.5, -0.5, 0},
+    {0.5, 0.5, 0},
+    {-0.5, 0.5, 0}
 };
+
+//const std::vector<vec3> triangleVertices = {
+//    {0.5, 0.5, 0},
+//    {1.5, 0.5, 0},
+//    {1.5, 1.5, 0},
+//    {0.5, 1.5, 0}
+//};
 
 const std::vector<int> triangleIndices = {
     0, 1, 2,
-    1, 2, 3,
-    0, 2, 4
+    2, 3, 0
 };
 
 const std::vector<u8> triangleColors = {
@@ -37,14 +42,14 @@ float triangleArea(const vec2& v1, const vec2& v2, const vec2& v3) {
 
 void raster(
         sfr::window::window_data& window,
-        const std::vector<vec2>& vertices,
+        const std::vector<vec3>& vertices,
         const std::vector<int>& indices
 ) {
     for (int i = 0; i < indices.size(); i += 3) {
         auto& v1    = vertices[indices[i + 0]];
         auto& v2    = vertices[indices[i + 1]];
         auto& v3    = vertices[indices[i + 2]];
-        auto area   = triangleArea(v1, v2, v3);
+        auto area   = triangleArea(vec2(v1), vec2(v2), vec2(v3));
         auto left   = std::min(std::min(v1.x, v2.x), v3.x);
         auto bottom = std::min(std::min(v1.y, v2.y), v3.y);
         auto top    = std::max(std::max(v1.y, v2.y), v3.y);
@@ -56,7 +61,8 @@ void raster(
                 auto subArea2 = triangleArea(v1, p, v3);
                 auto subArea3 = triangleArea(v1, v2, p);
 
-                if (std::abs(area - (subArea1 + subArea2 + subArea3)) < 0.001f) {
+                auto inBounds = (x >= 0 && x < WindowWidth && y >= 0 && y < WindowHeight);
+                if (std::abs(area - (subArea1 + subArea2 + subArea3)) < 12.f && inBounds) {
                     sfr::window::setPixel(
                             window,
                             x,
@@ -71,31 +77,51 @@ void raster(
     }
 }
 
-std::vector<vec2> viewportTransform(
+std::vector<vec3> viewportTransform(
         const logic_space& logicSpace,
         const viewport_space& viewportSpace,
-        const std::vector<vec2>& vertices
+        const std::vector<vec3>& vertices
 ) {
     auto viewportTransform = viewport(logicSpace, viewportSpace);
 
-    std::vector<vec2> ret(vertices.size());
+    std::vector<vec3> ret(vertices.size());
     for (int i = 0; i < vertices.size(); i++) {
-        auto v = vec4(vertices[i]);
-        ret[i] = vec2(viewportTransform * v);
+        auto v = vec4(vertices[i].x, vertices[i].y, 1, 1);
+        ret[i] = vec3(viewportTransform * v);
     }
 
+    return ret;
+}
+
+std::vector<vec3> clipSpaceTransform(
+        const std::vector<vec3>& vertices,
+        const mat4& transformation
+) {
+    std::vector<vec3> ret(vertices.size());
+    for (int i = 0; i < vertices.size(); i++) {
+        auto v = transformation * vec4(vertices[i], 1);
+        v /= v.w;
+
+        ret[i] = vec3(v);
+    }
     return ret;
 }
 
 int main() {
     auto window = sfr::window::init(WindowWidth, WindowHeight);
 
-    logic_space logicSpace{0, 0, 16, 9};
+    logic_space logicSpace{-1, -1, 2, 2};
     viewport_space viewportSpace{0, 0, 1280, 720};
 
-    auto newVerts = viewportTransform(logicSpace, viewportSpace, triangleVertices);
+    mat4 transformation = mat4(1.f);
+    transformation *= perspective(60.f * (M_PI / 180.f), 16.0f / 9.0f, 0.1f, 100.f);
+    transformation *= view(vec3(0, 0, 2), vec3(0, 0, 1), vec3(1, 0, 0), vec3(0, 1, 0));
+    transformation *= translate({1.0f, 0.0f, 0.0f});
 
-    raster(window, newVerts, triangleIndices);
+    auto clipspaceVerts = clipSpaceTransform(triangleVertices, transformation);
+    auto viewportVerts = viewportTransform(logicSpace, viewportSpace, clipspaceVerts);
+
+    raster(window, viewportVerts, triangleIndices);
     sfr::window::blitPixels(window);
 
     while (!sfr::window::shouldClose(window)) {
