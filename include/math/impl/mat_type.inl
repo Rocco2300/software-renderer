@@ -75,10 +75,10 @@ mat<T, Size> operator*(const mat<T, Size>& a, const mat<T, Size>& b) {
     for (int i = 0; i < 4; i++) {
         __m128 brod[4];
         for (int j = 0; j < 4; j++) {
-            if (i >= Size) {
+            if (i >= Size || j >= Size) {
                 brod[j] = _mm_set1_ps(0);
             } else {
-                brod[j] = _mm_set1_ps(b[j][i]);
+                brod[j] = _mm_set1_ps(b[i][j]);
             }
         }
 

@@ -151,7 +151,7 @@ float length(const vec<T, Size>& v) {
 
 template <typename T, size_t Size>
 float dot(const vec<T, Size>& u, const vec<T, Size>& v) {
-    auto result = _mm_dp_ps(u, v, 0x31);
+    auto result = _mm_dp_ps(u, v, 0xFF);
     return _mm_cvtss_f32(result);
 }
 

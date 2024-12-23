@@ -19,6 +19,7 @@ struct vec<T, 4> {
     vec(const T& x, const T& y, const T& z, const T& w);
     vec(const __m128& reg);
     vec(const vec<T, 2>& other, T z = 0, T w = 0);
+    vec(const vec<T, 3>& other, T w = 0);
     vec(const vec<T, 4>& other);
 
     vec<T, 4>& operator=(const vec<T, 4>& other);

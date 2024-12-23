@@ -28,6 +28,13 @@ vec<T, 3>::vec(const vec<T, 3>& other) {
 }
 
 template <typename T>
+vec<T, 3>::vec(const vec<T, 4>& other) {
+    this->data[0] = other.data[0];
+    this->data[1] = other.data[1];
+    this->data[2] = other.data[2];
+}
+
+template <typename T>
 vec<T, 3>& vec<T, 3>::operator=(const vec<T, 3>& other) {
     this->data = other.data;
     return *this;
