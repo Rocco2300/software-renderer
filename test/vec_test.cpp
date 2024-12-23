@@ -34,21 +34,21 @@ TEST_CASE("vec addition", "[math]") {
     vec3 e(0.1f, 2.6f, 8.2f);
 
     vec2 res1 = a + b;
-    REQUIRE(res1[0] - 7.4f < Epsilon);
-    REQUIRE(res1[1] - 5.7f < Epsilon);
+    REQUIRE(std::abs(res1[0] - 7.4f) < Epsilon);
+    REQUIRE(std::abs(res1[1] - 5.7f) < Epsilon);
 
     vec2 res2 = a + c;
-    REQUIRE(res2[0] - 3.3f < Epsilon);
-    REQUIRE(res2[1] - 5.45f < Epsilon);
+    REQUIRE(std::abs(res2[0] - 3.3f) < Epsilon);
+    REQUIRE(std::abs(res2[1] - 5.45f) < Epsilon);
 
     vec2 res3 = b + c;
-    REQUIRE(res3[0] - 6.1f < Epsilon);
-    REQUIRE(res3[1] - 0.75f < Epsilon);
+    REQUIRE(std::abs(res3[0] - 6.1f) < Epsilon);
+    REQUIRE(std::abs(res3[1] - 0.75f) < Epsilon);
 
     vec3 res4 = d + e;
-    REQUIRE(res4[0] - 1.1f < Epsilon);
-    REQUIRE(res4[1] - 4.1f < Epsilon);
-    REQUIRE(res4[2] - 11.4f < Epsilon);
+    REQUIRE(std::abs(res4[0] - 1.1f) < Epsilon);
+    REQUIRE(std::abs(res4[1] - 4.1f) < Epsilon);
+    REQUIRE(std::abs(res4[2] - 11.4f) < Epsilon);
 }
 
 TEST_CASE("vec subtract", "[math]") {
@@ -102,8 +102,8 @@ TEST_CASE("vec dot product", "[math]") {
 
     auto res1 = dot(a, b);
     auto res2 = dot(c, d);
-    REQUIRE(res1 - 2.3f < Epsilon);
-    REQUIRE(res2 - 42.2f < Epsilon);
+    REQUIRE(std::abs(res1 - 2.3f) < Epsilon);
+    REQUIRE(std::abs(res2 - 42.2f) < Epsilon);
 }
 
 TEST_CASE("vec length", "[math]") {
@@ -112,8 +112,8 @@ TEST_CASE("vec length", "[math]") {
 
     auto res1 = length(a);
     auto res2 = length(b);
-    REQUIRE(res1 - 1.3f < Epsilon);
-    REQUIRE(res2 - 2.471f < Epsilon);
+    REQUIRE(std::abs(res1 - 1.3f) < Epsilon);
+    REQUIRE(std::abs(res2 - 2.471f) < Epsilon);
 }
 
 TEST_CASE("vec normalization", "[math]") {
