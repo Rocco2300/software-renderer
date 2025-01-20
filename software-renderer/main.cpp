@@ -109,7 +109,7 @@ int main() {
     mat4 transformation = mat4(1.f);
     transformation *= perspective(60.f * (M_PI / 180.f), 16.0f / 9.0f, 0.1f, 100.f);
     transformation *= view(vec3(0, 0, 2), vec3(0, 0, 1), vec3(1, 0, 0), vec3(0, 1, 0));
-    transformation *= translate({1.0f, 0.0f, 0.0f});
+    //transformation *= translate({1.0f, 0.0f, 0.0f});
 
     auto clipspaceVerts = clipSpaceTransform(triangleVertices, transformation);
     auto viewportVerts = viewportTransform(logicSpace, viewportSpace, clipspaceVerts);
