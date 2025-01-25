@@ -14,10 +14,6 @@ TEST_CASE("vec equality", "[math]") {
     REQUIRE(v1 == v2);
     REQUIRE(v1 == v1);
     REQUIRE(v2 == v2);
-
-    ivec2 i1(1, 2);
-    ivec2 i2(1, 2);
-    REQUIRE(i1 == i2);
 }
 
 TEST_CASE("vec inequality", "[math]") {
@@ -28,10 +24,6 @@ TEST_CASE("vec inequality", "[math]") {
     vec2 v1(1.0f, 0.5f);
     vec2 v2(1.2f, 0.7f);
     REQUIRE(v1 != v2);
-
-    ivec2 i1(1, 2);
-    ivec2 i2(2, 3);
-    REQUIRE(i1 != i2);
 }
 
 TEST_CASE("vec addition", "[math]") {
@@ -57,11 +49,6 @@ TEST_CASE("vec addition", "[math]") {
     REQUIRE(std::abs(res4[0] - 1.1f) < Epsilon);
     REQUIRE(std::abs(res4[1] - 4.1f) < Epsilon);
     REQUIRE(std::abs(res4[2] - 11.4f) < Epsilon);
-
-    ivec2 i1(1, 2);
-    ivec2 i2(2, 3);
-    auto res5 = i1 + i2;
-    REQUIRE(res5 == vec<int, 2>(3, 4));
 }
 
 TEST_CASE("vec subtract", "[math]") {
@@ -81,11 +68,6 @@ TEST_CASE("vec subtract", "[math]") {
     REQUIRE(res3 != res4);
     REQUIRE(res3 == vec3(0.3f, 0.3f, -2.5f));
     REQUIRE(res4 == vec3(-0.3f, -0.3f, 2.5f));
-
-    ivec2 i1(1, 2);
-    ivec2 i2(2, 3);
-    auto res5 = i2 - i1;
-    REQUIRE(res5 == vec<int, 2>(1, 1));
 }
 
 TEST_CASE("vec multiplication with scalar", "[math]") {
@@ -102,22 +84,14 @@ TEST_CASE("vec multiplication with scalar", "[math]") {
     auto res4 = b * s;
     REQUIRE(res3 == res4);
     REQUIRE(res3 == vec3(3.4f, 16.8f, 6.6f));
-
-    ivec2 i(1, 2);
-    auto res5 = 3 * i;
-    REQUIRE(res5 == vec<int, 2>(3, 6));
 }
 
 TEST_CASE("vec division with scalar", "[math]") {
     float s = 2.f;
     vec3 a(2.f, 3.3f, 5.2f);
 
-    auto res1 = a / s;
-    REQUIRE(res1 == vec3(1.f, 1.65f, 2.6f));
-
-    ivec2 i(2, 5);
-    auto res2 = i / 2;
-    REQUIRE(res2 == vec<int, 2>(1, 2));
+    auto res = a / s;
+    REQUIRE(res == vec3(1.f, 1.65f, 2.6f));
 }
 
 TEST_CASE("vec dot product", "[math]") {

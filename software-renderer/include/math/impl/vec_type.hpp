@@ -53,13 +53,13 @@ float dot(const vec<T, Size>& u, const vec<T, Size>& v);
 template <typename T, size_t Size>
 vec<T, Size> normalize(const vec<T, Size>& v);
 
-template <>
-struct vec<float, 2>;
+template <typename T>
+struct vec<T, 2>;
 
-template <>
-struct vec<float, 3>;
+template <typename T>
+struct vec<T, 3>;
 
-template <>
-struct vec<float, 4>;
+template <typename T>
+struct vec<T, 4>;
 
 #include "vec_type.inl"

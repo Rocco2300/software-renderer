@@ -96,24 +96,16 @@ vec<T, Size>& vec<T, Size>::operator/=(float s) {
 // god bless https://stackoverflow.com/questions/6042399/how-to-compare-m128-types
 template <typename T, size_t Size>
 bool operator==(const vec<T, Size>& u, const vec<T, Size>& v) {
-    for (int i = 0; i < Size; i++) {
-        if (u[i] != v[i]) {
-            return false;
-        }
-    }
-
-    return true;
+    auto eps = _mm_set1_ps(0.001f);
+    auto abd = _mm_andnot_ps(_mm_set1_ps(-0.f), _mm_sub_ps(u, v));
+    return _mm_movemask_ps(_mm_cmplt_ps(abd, eps)) == 0xF;
 }
 
 template <typename T, size_t Size>
 bool operator!=(const vec<T, Size>& u, const vec<T, Size>& v) {
-    for (int i = 0; i < Size; i++) {
-        if (u[i] == v[i]) {
-            return false;
-        }
-    }
-
-    return true;
+    auto eps = _mm_set1_ps(0.001f);
+    auto abd = _mm_andnot_ps(_mm_set1_ps(-0.f), _mm_sub_ps(u, v));
+    return _mm_movemask_ps(_mm_cmplt_ps(abd, eps)) != 0xF;
 }
 
 template <typename T, size_t Size>
@@ -123,35 +115,18 @@ const T& vec<T, Size>::operator[](size_t index) const {
 
 template <typename T, size_t Size>
 vec<T, Size> operator+(const vec<T, Size>& u, const vec<T, Size>& v) {
-    vec<T, Size> res(0);
-
-    for (int i = 0; i < Size; i++) {
-        res[i] = u[i] + v[i];
-    }
-
-    return res;
+    return _mm_add_ps(u, v);
 }
 
 template <typename T, size_t Size>
 vec<T, Size> operator-(const vec<T, Size>& u, const vec<T, Size>& v) {
-    vec<T, Size> res(0);
-
-    for (int i = 0; i < Size; i++) {
-        res[i] = u[i] - v[i];
-    }
-
-    return res;
+    return _mm_sub_ps(u, v);
 }
 
 template <typename T, size_t Size>
 vec<T, Size> operator*(const float& s, const vec<T, Size>& v) {
-    vec<T, Size> res(0);
-
-    for (int i = 0; i < Size; i++) {
-        res[i] = s * v[i];
-    }
-
-    return res;
+    auto scalar = _mm_load1_ps(&s);
+    return _mm_mul_ps(v, scalar);
 }
 
 template <typename T, size_t Size>
@@ -161,33 +136,23 @@ vec<T, Size> operator*(const vec<T, Size>& v, const float& s) {
 
 template <typename T, size_t Size>
 vec<T, Size> operator/(const vec<T, Size>& v, const float& s) {
-    vec<T, Size> res(0);
-
-    for (int i = 0; i < Size; i++) {
-        res[i] = s / v[i];
-    }
-
-    return res;
+    auto scalar = _mm_load1_ps(&s);
+    return _mm_div_ps(v, scalar);
 }
 
 template <typename T, size_t Size>
 float length(const vec<T, Size>& v) {
-    float res = 0;
-    for (int i = 0; i < Size; i++) {
-        res += v[i] * v[i];
-    }
+    auto sq  = _mm_mul_ps(v, v);
+    auto sum = _mm_hadd_ps(sq, sq);
+    sum      = _mm_hadd_ps(sum, sum);
 
-    return std::sqrt(res);
+    return std::sqrt(_mm_cvtss_f32(sum));
 }
 
 template <typename T, size_t Size>
 float dot(const vec<T, Size>& u, const vec<T, Size>& v) {
-    float res = 0;
-    for (int i = 0; i < Size; i++) {
-        res += u[i] * v[i];
-    }
-
-    return res;
+    auto result = _mm_dp_ps(u, v, 0xFF);
+    return _mm_cvtss_f32(result);
 }
 
 template <typename T, size_t Size>
