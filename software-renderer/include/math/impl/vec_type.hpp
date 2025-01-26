@@ -4,6 +4,9 @@
 
 template <typename T, size_t Size>
 struct vec {
+    typedef T type;
+    static const size_t size = Size;
+
     storage<T, Size> data{};
 
     vec() = default;

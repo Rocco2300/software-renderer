@@ -4,6 +4,9 @@
 
 template <typename T>
 struct vec<T, 4> {
+    typedef T type;
+    static const size_t size = 4;
+
     union {
         storage<T, 4> data{};
         struct {

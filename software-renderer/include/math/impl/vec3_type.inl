@@ -82,16 +82,12 @@ vec<T, 3>& vec<T, 3>::operator/=(float s) {
 // god bless https://stackoverflow.com/questions/6042399/how-to-compare-m128-types
 template <typename T>
 bool operator==(const vec<T, 3>& u, const vec<T, 3>& v) {
-    auto eps = _mm_set1_ps(0.001f);
-    auto abd = _mm_andnot_ps(_mm_set1_ps(-0.f), _mm_sub_ps(u, v));
-    return _mm_movemask_ps(_mm_cmplt_ps(abd, eps)) == 0xF;
+    return detail::computeEq<vec<T, 3>, std::is_same<T, float>::value>::call(u, v);
 }
 
 template <typename T>
 bool operator!=(const vec<T, 3>& u, const vec<T, 3>& v) {
-    auto eps = _mm_set1_ps(0.001f);
-    auto abd = _mm_andnot_ps(_mm_set1_ps(-0.f), _mm_sub_ps(u, v));
-    return _mm_movemask_ps(_mm_cmplt_ps(abd, eps)) != 0xF;
+    return detail::computeNeq<vec<T, 3>, std::is_same<T, float>::value>::call(u, v);
 }
 
 template <typename T>
@@ -101,18 +97,17 @@ const T& vec<T, 3>::operator[](size_t index) const {
 
 template <typename T>
 vec<T, 3> operator+(const vec<T, 3>& u, const vec<T, 3>& v) {
-    return _mm_add_ps(u, v);
+    return detail::computeAdd<vec<T, 3>, std::is_same<T, float>::value>::call(u, v);
 }
 
 template <typename T>
 vec<T, 3> operator-(const vec<T, 3>& u, const vec<T, 3>& v) {
-    return _mm_sub_ps(u, v);
+    return detail::computeSub<vec<T, 3>, std::is_same<T, float>::value>::call(u, v);
 }
 
 template <typename T>
 vec<T, 3> operator*(const float& s, const vec<T, 3>& v) {
-    auto scalar = _mm_load1_ps(&s);
-    return _mm_mul_ps(v, scalar);
+    return detail::computeMul<vec<T, 3>, std::is_same<T, float>::value>::call(s, v);
 }
 
 template <typename T>
@@ -122,6 +117,5 @@ vec<T, 3> operator*(const vec<T, 3>& v, const float& s) {
 
 template <typename T>
 vec<T, 3> operator/(const vec<T, 3>& v, const float& s) {
-    auto scalar = _mm_load1_ps(&s);
-    return _mm_div_ps(v, scalar);
+    return detail::computeDiv<vec<T, 3>, std::is_same<T, float>::value>::call(v, s);
 }
