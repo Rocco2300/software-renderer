@@ -5,12 +5,12 @@
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 
+#include <cassert>
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <cassert>
 
 constexpr float vertices[] = {-1.0f, -1.0f, 3.0f, -1.0f, -1.0f, 3.0f};
 
@@ -71,20 +71,10 @@ static u32 createShaderProgram(const std::string& vertexPath, const std::string&
     return program;
 }
 
-static u32 createTexture(u8*& data, int width, int height) {
+static u32 createTexture(const void* data, int width, int height) {
     u32 texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-
-    data = new u8[width * height * 3];
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int index       = (y * width + x) * 3;
-            data[index + 0] = 0;
-            data[index + 1] = 0;
-            data[index + 2] = 0;
-        }
-    }
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -163,8 +153,9 @@ window_data init(int width, int height) {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*) 0);
     glEnableVertexAttribArray(0);
 
+    window.tex     = texture::create(width, height);
     window.pbo     = createPBO(width, height);
-    window.texture = createTexture(window.data, width, height);
+    window.texture = createTexture(window.tex.data, width, height);
 
     return window;
 }
@@ -177,30 +168,17 @@ void destroy(window_data& window) {
     glfwTerminate();
 }
 
-void clear(window_data& window, u8 r, u8 g, u8 b) {
-    for (int y = 0; y < window.height; y++) {
-        for (int x = 0; x < window.height; x++) {
-            auto index = (y * window.width + x) * 3;
+void clear(window_data& window, const color& col) { texture::clear(&window.tex, col); }
 
-            window.data[index + 0] = r;
-            window.data[index + 1] = g;
-            window.data[index + 2] = b;
-        }
-    }
-}
-
-void setPixel(window_data& window, int x, int y, u8 r, u8 g, u8 b) {
+void setPixel(window_data& window, int x, int y, const color& col) {
     assert(x >= 0 && x < window.width);
     assert(y >= 0 && y < window.height);
-    auto index = (y * window.width + x) * 3;
 
-    window.data[index + 0] = r;
-    window.data[index + 1] = g;
-    window.data[index + 2] = b;
+    texture::setPixel(&window.tex, x, y, col);
 }
 
 void blitPixels(window_data& window) {
-    updateTexture(window.texture, window.pbo, window.width, window.height, window.data);
+    updateTexture(window.texture, window.pbo, window.width, window.height, window.tex.data);
 }
 
 void display(window_data& window) {
@@ -218,7 +196,5 @@ void display(window_data& window) {
     glfwPollEvents();
 }
 
-bool shouldClose(window_data& window) {
-    return glfwWindowShouldClose(window.glfwWindow);
-}
+bool shouldClose(window_data& window) { return glfwWindowShouldClose(window.glfwWindow); }
 };// namespace sfr::window

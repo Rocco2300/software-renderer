@@ -21,10 +21,10 @@ const std::vector<int> triangleIndices = {
     2, 3, 0
 };
 
-const std::vector<u8> triangleColors = {
-    255, 0, 0,
-    0, 255, 0,
-    0, 0, 255
+const std::vector<color> triangleColors = {
+    {255, 0, 0},
+    {0, 255, 0},
+    {0, 0, 255}
 };
 // clang-format on
 
@@ -39,6 +39,7 @@ void raster(
         const std::vector<int>& indices
 ) {
     for (int i = 0; i < indices.size(); i += 3) {
+        auto& color = triangleColors[i / 3];
         auto& v1    = vertices[indices[i + 0]];
         auto& v2    = vertices[indices[i + 1]];
         auto& v3    = vertices[indices[i + 2]];
@@ -60,9 +61,7 @@ void raster(
                             window,
                             x,
                             y,
-                            triangleColors[i + 0],
-                            triangleColors[i + 1],
-                            triangleColors[i + 2]
+                            color
                     );
                 }
             }
