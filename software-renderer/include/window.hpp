@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types.hpp"
+#include "texture.hpp"
 
 class GLFWwindow;
 
@@ -12,7 +13,7 @@ struct window_data {
     u32 VAO, VBO;
     GLFWwindow* glfwWindow;
 
-    u8* data;
+    texture::texture_data tex;
     int width;
     int height;
 };
@@ -20,8 +21,8 @@ struct window_data {
 window_data init(int width, int height);
 void destroy(window_data& window);
 
-void clear(window_data& window, u8 r, u8 g, u8 b);
-void setPixel(window_data& window, int x, int y, u8 r, u8 g, u8 b);
+void clear(window_data& window, const color& col);
+void setPixel(window_data& window, int x, int y, const color& col);
 void blitPixels(window_data& window);
 
 void display(window_data& window);
