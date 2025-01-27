@@ -59,17 +59,12 @@ storage<T, Size>::operator T*() {
 template <typename T, size_t Size>
 storage<T, Size>::operator __m128() const {
     __m128 reg;
-    __m128 mask;
     switch (Size) {
     case 2:
-        reg  = _mm_loadu_ps(data);
-        mask = _mm_castsi128_ps(_mm_set_epi32(0, 0, -1, -1));
-        reg  = _mm_and_ps(reg, mask);
+        reg = _mm_set_ps(0, 0, data[1], data[0]);
         break;
     case 3:
-        reg  = _mm_loadu_ps(data);
-        mask = _mm_castsi128_ps(_mm_set_epi32(0, -1, -1, -1));
-        reg  = _mm_and_ps(reg, mask);
+        reg = _mm_set_ps(0, data[2], data[1], data[0]);
         break;
     case 4:
         reg = _mm_loadu_ps(data);

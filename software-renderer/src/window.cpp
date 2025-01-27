@@ -19,6 +19,11 @@ static std::string loadShaderSource(const std::string& fileName) {
     path += fileName;
 
     std::ifstream in(path);
+    if (!in.is_open()) {
+        std::cerr << "Cannot open file " << path << '\n';
+        return "";
+    }
+
     std::stringstream fileData;
     fileData << in.rdbuf();
 

@@ -6,7 +6,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(TEST_DIR ${CMAKE_SOURCE_DIR}/test)
 set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/software-renderer)
 
-add_compile_options(-msse4.1)
+add_compile_options(-msse4.1 -ffast-math)
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_options(-O3)
+endif()
 
 file(GLOB SRC ${SOURCE_DIR}/src/*.cpp)
 file(GLOB INCL ${SOURCE_DIR}/include/math/*)
