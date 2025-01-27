@@ -26,6 +26,7 @@ void destroy(texture_data* tex);
 void clear(texture_data* tex, const vec3& col);
 void clear(texture_data* tex, const color& col);
 
+float getDepth(texture_data* tex, int x, int y);
 color* getPixel(texture_data* tex, int x, int y);
 void setPixel(texture_data* tex, int x, int y, const vec3& col);
 void setPixel(texture_data* tex, int x, int y, const color& col);

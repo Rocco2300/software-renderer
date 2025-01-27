@@ -56,14 +56,22 @@ void raster(
                 auto subArea2 = triangleArea(v1, p, v3);
                 auto subArea3 = triangleArea(v1, v2, p);
 
+                auto u = subArea1 / area;
+                auto v = subArea2 / area;
+                auto w = subArea3 / area;
+                auto depth = u * v1.z + v * v2.z + w * v3.z;
+
+                auto above = sfr::window::getDepth(window, p.x, p.y) >= depth;
                 auto inBounds = (p.x >= 0 && p.x < WindowWidth && p.y >= 0 && p.y < WindowHeight);
-                if (std::abs(area - (subArea1 + subArea2 + subArea3)) < 12.f && inBounds) {
+                if (std::abs(area - (subArea1 + subArea2 + subArea3)) < 12.f && inBounds && above) {
                     sfr::window::setPixel(
                             window,
                             p.x,
                             p.y,
                             color
                     );
+
+                    sfr::window::setDepth(window, p.x, p.y, depth);
                 }
             }
         }
