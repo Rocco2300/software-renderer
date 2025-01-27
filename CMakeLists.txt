@@ -33,5 +33,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(gl3w)
 
+FetchContent_Declare(
+        fast_obj
+        GIT_REPOSITORY https://github.com/thisistherk/fast_obj.git
+        GIT_TAG v1.3
+)
+FetchContent_MakeAvailable(fast_obj)
+
 add_subdirectory(${PROJECT_SOURCE_DIR}/test)
 add_subdirectory(${PROJECT_SOURCE_DIR}/software-renderer)

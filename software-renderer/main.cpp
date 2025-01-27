@@ -4,6 +4,8 @@
 #include "math/vec.hpp"
 #include "math/transform.hpp"
 
+#include <fast_obj.h>
+
 #include <vector>
 
 constexpr int WindowWidth  = 1280;
@@ -111,6 +113,7 @@ int main() {
     //transformation *= translate({1.0f, 0.0f, 0.0f});
 
     auto clipspaceVerts = clipSpaceTransform(triangleVertices, transformation);
+    // clip out of bounds triangles
     auto viewportVerts = viewportTransform(logicSpace, viewportSpace, clipspaceVerts);
 
     raster(window, viewportVerts, triangleIndices);
