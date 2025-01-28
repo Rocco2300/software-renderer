@@ -10,18 +10,6 @@
 constexpr int WindowWidth  = 1280;
 constexpr int WindowHeight = WindowWidth * (9.0f / 16.f);
 
-const std::vector<vec3> triangleVertices = {
-    {-0.5, -0.5, 0},
-    {0.5, -0.5, 0},
-    {0.5, 0.5, 0},
-    {-0.5, 0.5, 0}
-};
-
-const std::vector<int> triangleIndices = {
-    0, 1, 2,
-    2, 3, 0
-};
-
 const std::vector<color> triangleColors = {
     {255, 0, 0},
     {0, 255, 0},

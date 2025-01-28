@@ -175,29 +175,29 @@ void destroy(window_data& window) {
 }
 
 void clear(window_data& window, const color& col) {
-    texture::clear(&window.colorBuf, col);
-    texture::clear(&window.depthBuf, vec3(1.f));
+    texture::clear(window.colorBuf, col);
+    texture::clear(window.depthBuf, vec3(1.f));
 }
 
 void setPixel(window_data& window, int x, int y, const color& col) {
     assert(x >= 0 && x < window.width);
     assert(y >= 0 && y < window.height);
 
-    texture::setPixel(&window.colorBuf, x, y, col);
+    texture::setPixel(window.colorBuf, x, y, col);
 }
 
 void setDepth(window_data& window, int x, int y, const float& depth) {
     assert(x >= 0 && x < window.width);
     assert(y >= 0 && y < window.height);
 
-    texture::setPixel(&window.depthBuf, x, y, vec3(depth));
+    texture::setPixel(window.depthBuf, x, y, vec3(depth));
 }
 
 float getDepth(window_data& window, int x, int y) {
     assert(x >= 0 && x < window.width);
     assert(y >= 0 && y < window.height);
 
-    return texture::getDepth(&window.depthBuf, x, y);
+    return texture::getDepth(window.depthBuf, x, y);
 }
 
 void blitPixels(window_data& window) {

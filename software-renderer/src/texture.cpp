@@ -26,67 +26,67 @@ texture_data create(size_t width, size_t height, type textureType) {
     return ret;
 }
 
-void destroy(texture_data* tex) {
-    if (tex->type == Color) {
-        auto* data = static_cast<color*>(tex->data);
+void destroy(texture_data& tex) {
+    if (tex.type == Color) {
+        auto* data = static_cast<color*>(tex.data);
         delete[] data;
 
-        tex->data = nullptr;
+        tex.data = nullptr;
     } else {
-        auto* data = static_cast<vec3*>(tex->data);
+        auto* data = static_cast<vec3*>(tex.data);
         delete[] data;
 
-        tex->data = nullptr;
+        tex.data = nullptr;
     }
 }
 
-void clear(texture_data* tex, const vec3& col) {
-    assert(tex->type == Depth);
+void clear(texture_data& tex, const vec3& col) {
+    assert(tex.type == Depth);
 
-    auto* data = static_cast<vec3*>(tex->data);
-    for (int i = 0; i < tex->width * tex->height; i++) {
+    auto* data = static_cast<vec3*>(tex.data);
+    for (int i = 0; i < tex.width * tex.height; i++) {
         data[i] = col;
     }
 }
 
-void clear(texture_data* tex, const color& col) {
-    assert(tex->type == Color);
+void clear(texture_data& tex, const color& col) {
+    assert(tex.type == Color);
 
-    auto* data = static_cast<color*>(tex->data);
-    for (int i = 0; i < tex->width * tex->height; i++) {
+    auto* data = static_cast<color*>(tex.data);
+    for (int i = 0; i < tex.width * tex.height; i++) {
         data[i] = col;
     }
 }
 
-float getDepth(texture_data* tex, int x, int y) {
-    assert(tex->type == Depth);
+float getDepth(texture_data& tex, int x, int y) {
+    assert(tex.type == Depth);
 
-    auto idx   = index(x, y, tex->width);
-    auto* data = static_cast<vec3*>(tex->data);
+    auto idx   = index(x, y, tex.width);
+    auto* data = static_cast<vec3*>(tex.data);
     return data[idx].r;
 }
 
-color* getPixel(texture_data* tex, int x, int y) {
-    assert(tex->type == Color);
+color* getPixel(texture_data& tex, int x, int y) {
+    assert(tex.type == Color);
 
-    auto idx   = index(x, y, tex->width);
-    auto* data = static_cast<color*>(tex->data);
+    auto idx   = index(x, y, tex.width);
+    auto* data = static_cast<color*>(tex.data);
     return &data[idx];
 }
 
-void setPixel(texture_data* tex, int x, int y, const vec3& col) {
-    assert(tex->type == Depth);
+void setPixel(texture_data& tex, int x, int y, const vec3& col) {
+    assert(tex.type == Depth);
 
-    auto idx   = index(x, y, tex->width);
-    auto* data = static_cast<vec3*>(tex->data);
+    auto idx   = index(x, y, tex.width);
+    auto* data = static_cast<vec3*>(tex.data);
     data[idx]  = col;
 }
 
-void setPixel(texture_data* tex, int x, int y, const color& col) {
-    assert(tex->type == Color);
+void setPixel(texture_data& tex, int x, int y, const color& col) {
+    assert(tex.type == Color);
 
-    auto idx   = index(x, y, tex->width);
-    auto* data = static_cast<color*>(tex->data);
+    auto idx   = index(x, y, tex.width);
+    auto* data = static_cast<color*>(tex.data);
     data[idx]  = col;
 }
 
