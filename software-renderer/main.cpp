@@ -61,9 +61,11 @@ void raster(
                 auto w = subArea3 / area;
                 auto depth = u * v1.z + v * v2.z + w * v3.z;
 
+                const float eps = 12.f;
                 auto above = sfr::window::getDepth(window, p.x, p.y) >= depth;
                 auto inBounds = (p.x >= 0 && p.x < WindowWidth && p.y >= 0 && p.y < WindowHeight);
-                if (std::abs(area - (subArea1 + subArea2 + subArea3)) < 12.f && inBounds && above) {
+                auto insideTriangle = std::abs(area - (subArea1 + subArea2 + subArea3)) < eps;
+                if (insideTriangle && inBounds && above) {
                     sfr::window::setPixel(
                             window,
                             p.x,
