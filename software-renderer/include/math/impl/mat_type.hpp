@@ -7,11 +7,9 @@ struct vec;
 
 template <typename T, size_t Size>
 struct mat {
-private:
     //T data[4][4]{};
     storage<T, Size> data[Size];
 
-public:
     mat() = default;
     mat(const T& diag);
     mat(const vec<T, 2>& v1, const vec<T, 2>& v2, const vec<T, 2>& v3);

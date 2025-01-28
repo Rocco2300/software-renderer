@@ -1,14 +1,13 @@
 #include "texture.hpp"
 
-static int index(int x, int y, size_t width) {
-    return y * width + x;
-}
+static int index(int x, int y, size_t width) { return y * width + x; }
 
 namespace sfr::texture {
 
 texture_data create(size_t width, size_t height, type textureType) {
     texture_data ret;
-    ret.width = width;
+    ret.type   = textureType;
+    ret.width  = width;
     ret.height = height;
 
     if (textureType == Color) {
@@ -20,7 +19,7 @@ texture_data create(size_t width, size_t height, type textureType) {
     } else {
         auto* data = new vec3[width * height];
         for (int i = 0; i < width * height; i++) {
-            data[i] = vec3{};
+            data[i] = vec3{1.f};
         }
         ret.data = data;
     }
@@ -59,10 +58,18 @@ void clear(texture_data* tex, const color& col) {
     }
 }
 
+float getDepth(texture_data* tex, int x, int y) {
+    assert(tex->type == Depth);
+
+    auto idx   = index(x, y, tex->width);
+    auto* data = static_cast<vec3*>(tex->data);
+    return data[idx].r;
+}
+
 color* getPixel(texture_data* tex, int x, int y) {
     assert(tex->type == Color);
 
-    auto idx = index(x, y, tex->width);
+    auto idx   = index(x, y, tex->width);
     auto* data = static_cast<color*>(tex->data);
     return &data[idx];
 }
@@ -70,17 +77,17 @@ color* getPixel(texture_data* tex, int x, int y) {
 void setPixel(texture_data* tex, int x, int y, const vec3& col) {
     assert(tex->type == Depth);
 
-    auto idx = index(x, y, tex->width);
+    auto idx   = index(x, y, tex->width);
     auto* data = static_cast<vec3*>(tex->data);
-    data[idx] = col;
+    data[idx]  = col;
 }
 
 void setPixel(texture_data* tex, int x, int y, const color& col) {
     assert(tex->type == Color);
 
-    auto idx = index(x, y, tex->width);
+    auto idx   = index(x, y, tex->width);
     auto* data = static_cast<color*>(tex->data);
-    data[idx] = col;
+    data[idx]  = col;
 }
 
-};
+};// namespace sfr::texture

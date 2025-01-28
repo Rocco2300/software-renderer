@@ -135,9 +135,9 @@ template <typename T>
 T det(mat<T, 3> m) {
     static __m128 cofactors = _mm_set_ps(0, 1, -1, 1);
 
-    __m128 row1 = m[0];
-    __m128 row2 = m[1];
-    __m128 row3 = m[2];
+    __m128 row1 = m.data[0];
+    __m128 row2 = m.data[1];
+    __m128 row3 = m.data[2];
 
     auto calcRow1 = _mm_shuffle_ps(row2, row2, _MM_SHUFFLE(2, 0, 2, 1));
     auto calcRow2 = _mm_shuffle_ps(row3, row3, _MM_SHUFFLE(0, 2, 1, 2));
