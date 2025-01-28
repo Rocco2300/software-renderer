@@ -19,6 +19,11 @@ static std::string loadShaderSource(const std::string& fileName) {
     path += fileName;
 
     std::ifstream in(path);
+    if (!in.is_open()) {
+        std::cerr << "Cannot open file " << path << '\n';
+        return "";
+    }
+
     std::stringstream fileData;
     fileData << in.rdbuf();
 
@@ -153,9 +158,10 @@ window_data init(int width, int height) {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*) 0);
     glEnableVertexAttribArray(0);
 
-    window.tex     = texture::create(width, height);
-    window.pbo     = createPBO(width, height);
-    window.texture = createTexture(window.tex.data, width, height);
+    window.colorBuf = texture::create(width, height);
+    window.depthBuf = texture::create(width, height, sfr::texture::Depth);
+    window.pbo      = createPBO(width, height);
+    window.texture  = createTexture(window.colorBuf.data, width, height);
 
     return window;
 }
@@ -168,17 +174,34 @@ void destroy(window_data& window) {
     glfwTerminate();
 }
 
-void clear(window_data& window, const color& col) { texture::clear(&window.tex, col); }
+void clear(window_data& window, const color& col) {
+    texture::clear(&window.colorBuf, col);
+    texture::clear(&window.depthBuf, vec3(1.f));
+}
 
 void setPixel(window_data& window, int x, int y, const color& col) {
     assert(x >= 0 && x < window.width);
     assert(y >= 0 && y < window.height);
 
-    texture::setPixel(&window.tex, x, y, col);
+    texture::setPixel(&window.colorBuf, x, y, col);
+}
+
+void setDepth(window_data& window, int x, int y, const float& depth) {
+    assert(x >= 0 && x < window.width);
+    assert(y >= 0 && y < window.height);
+
+    texture::setPixel(&window.depthBuf, x, y, vec3(depth));
+}
+
+float getDepth(window_data& window, int x, int y) {
+    assert(x >= 0 && x < window.width);
+    assert(y >= 0 && y < window.height);
+
+    return texture::getDepth(&window.depthBuf, x, y);
 }
 
 void blitPixels(window_data& window) {
-    updateTexture(window.texture, window.pbo, window.width, window.height, window.tex.data);
+    updateTexture(window.texture, window.pbo, window.width, window.height, window.colorBuf.data);
 }
 
 void display(window_data& window) {

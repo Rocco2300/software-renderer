@@ -13,7 +13,8 @@ struct window_data {
     u32 VAO, VBO;
     GLFWwindow* glfwWindow;
 
-    texture::texture_data tex;
+    texture::texture_data colorBuf;
+    texture::texture_data depthBuf;
     int width;
     int height;
 };
@@ -23,6 +24,8 @@ void destroy(window_data& window);
 
 void clear(window_data& window, const color& col);
 void setPixel(window_data& window, int x, int y, const color& col);
+void setDepth(window_data& window, int x, int y, const float& depth);
+float getDepth(window_data& window, int x, int y);
 void blitPixels(window_data& window);
 
 void display(window_data& window);
