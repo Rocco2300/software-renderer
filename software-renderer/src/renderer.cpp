@@ -251,14 +251,13 @@ void render(render_data& renderer, const mesh::mesh_data& mesh) {
     transformation *= perspective(60.f * (M_PI / 180.f), 16.0f / 9.0f, 0.1f, 100.f);
     transformation *= view(vec3(0, 0, 4), vec3(0, 0, 1), vec3(1, 0, 0), vec3(0, 1, 0));
 
-    std::vector<vec3> clipspaceVerts(mesh.vertices.size());
-    std::vector<vec3> viewportVerts(mesh.vertices.size());
+    std::vector<vec3> transformedVertices(mesh.vertices.size());
 
-    clipSpaceTransform(mesh.vertices, transformation, clipspaceVerts);
+    clipSpaceTransform(mesh.vertices, transformation, transformedVertices);
     // clip out of bounds triangles
-    viewportTransform(logicSpace, viewportSpace, clipspaceVerts, viewportVerts);
+    viewportTransform(logicSpace, viewportSpace, transformedVertices, transformedVertices);
 
-    raster(renderer, viewportVerts, mesh.indices);
+    raster(renderer, transformedVertices, mesh.indices);
 }
 
 void end(render_data& renderer) {
