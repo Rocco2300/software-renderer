@@ -65,6 +65,8 @@ static void viewportTransform(
     }
 }
 
+static u8 encodeNormal(float n) { return (u8) ((n * 0.5f + 0.5f) * 255.f); }
+
 enum volume_side { Near = 0, Far, Right, Left, Top, Bottom };
 
 static float signedDistance(volume_side side, const vec3& vertex) {
@@ -235,7 +237,7 @@ static void clipScene(
         std::vector<u32> outputIndices,
         std::vector<vec3>& outputVertices
 ) {
-    auto indices = inputIndices;
+    auto indices  = inputIndices;
     auto vertices = inputVertices;
     indices.resize(indices.size() * 2);
     vertices.resize(vertices.size() * 2);
@@ -252,8 +254,9 @@ namespace sfr::renderer {
 
 static void raster(
         render_data& renderer,
+        const std::vector<u32>& indices,
         const std::vector<vec3>& vertices,
-        const std::vector<u32>& indices
+        const std::vector<vec3>& normals
 );
 
 render_data init(int width, int height) {
@@ -316,7 +319,7 @@ void render(render_data& renderer, const mesh::mesh_data& mesh) {
     //clipScene(mesh.indices, transformedVertices, clippedIndices, clippedVertices);
     viewportTransform(logicSpace, viewportSpace, transformedVertices, transformedVertices);
 
-    raster(renderer, transformedVertices, mesh.indices);
+    raster(renderer, mesh.indices, transformedVertices, mesh.normals);
 }
 
 void end(render_data& renderer) {
@@ -339,16 +342,20 @@ void end(render_data& renderer) {
 
 static void raster(
         render_data& renderer,
+        const std::vector<u32>& indices,
         const std::vector<vec3>& vertices,
-        const std::vector<u32>& indices
+        const std::vector<vec3>& normals
 ) {
     auto width  = renderer.width;
     auto height = renderer.height;
     for (int i = 0; i < indices.size(); i += 3) {
-        auto& color = triangleColors[(i / 3) % 3];
+        //auto& color = triangleColors[(i / 3) % 3];
         auto& v1    = vertices[indices[i + 0]];
         auto& v2    = vertices[indices[i + 1]];
         auto& v3    = vertices[indices[i + 2]];
+        auto& v1N   = normals[indices[i + 0]];
+        auto& v2N   = normals[indices[i + 1]];
+        auto& v3N   = normals[indices[i + 2]];
         auto area   = triangleArea(vec2(v1), vec2(v2), vec2(v3));
         auto left   = std::min(std::min(v1.x, v2.x), v3.x);
         auto bottom = std::min(std::min(v1.y, v2.y), v3.y);
@@ -370,8 +377,14 @@ static void raster(
                 auto above          = sfr::texture::getDepth(renderer.depthBuf, p.x, p.y) >= depth;
                 auto inBounds       = (p.x >= 0 && p.x < width && p.y >= 0 && p.y < height);
                 auto insideTriangle = std::abs(area - (subArea1 + subArea2 + subArea3)) < eps;
+
+                auto fragNormal = u * v1N + v * v2N + w * v3N;
+                auto col =
+                        color(encodeNormal(fragNormal.x),
+                              encodeNormal(fragNormal.y),
+                              encodeNormal(fragNormal.z));
                 if (insideTriangle && inBounds && above) {
-                    sfr::texture::setPixel(renderer.colorBuf, p.x, p.y, color);
+                    sfr::texture::setPixel(renderer.colorBuf, p.x, p.y, col);
                     sfr::texture::setPixel(renderer.depthBuf, p.x, p.y, vec3(depth));
                 }
             }
