@@ -1,7 +1,10 @@
 #pragma once
 
 #include "mat.hpp"
+#include "util.hpp"
 #include "vec.hpp"
+
+namespace transform {
 
 inline mat4 translate(const vec3& translate) {
     auto ret  = mat4(1.f);
@@ -19,8 +22,27 @@ inline mat4 scale(const vec3& scale) {
     return ret;
 }
 
+inline mat4 rotate(vec3 axis, float angle) {
+    auto rad  = deg2Rad(angle);
+    auto ret = mat4(1.f);
+
+    ret[0][0] = axis.x * axis.x * (1 - cos(rad)) + cos(rad);
+    ret[1][0] = axis.x * axis.y * (1 - cos(rad)) - axis.z * sin(rad);
+    ret[2][0] = axis.x * axis.z * (1 - cos(rad)) + axis.y * sin(rad);
+
+    ret[0][1] = axis.x * axis.y * (1 - cos(rad)) + axis.z * sin(rad);
+    ret[1][1] = axis.y * axis.y * (1 - cos(rad)) + cos(rad);
+    ret[2][1] = axis.y * axis.z * (1 - cos(rad)) - axis.x * sin(rad);
+
+    ret[0][2] = axis.x * axis.z * (1 - cos(rad)) - axis.y * sin(rad);
+    ret[1][2] = axis.y * axis.z * (1 - cos(rad)) + axis.x * sin(rad);
+    ret[2][2] = axis.z * axis.z * (1 - cos(rad)) + cos(rad);
+
+    return ret;
+}
+
 inline mat4 rotateOX(float angle) {
-    auto rad  = angle * (M_PI / 180);
+    auto rad  = deg2Rad(angle);
     auto ret  = mat4(1.f);
     ret[1][1] = cos(rad);
     ret[1][2] = sin(rad);
@@ -30,7 +52,7 @@ inline mat4 rotateOX(float angle) {
 }
 
 inline mat4 rotateOY(float angle) {
-    auto rad  = angle * (M_PI / 180);
+    auto rad  = deg2Rad(angle);
     auto ret  = mat4(1.f);
     ret[0][0] = cos(rad);
     ret[0][2] = -sin(rad);
@@ -40,7 +62,7 @@ inline mat4 rotateOY(float angle) {
 }
 
 inline mat4 rotateOZ(float angle) {
-    auto rad  = angle * (M_PI / 180);
+    auto rad  = deg2Rad(angle);
     auto ret  = mat4(1.f);
     ret[0][0] = cos(rad);
     ret[0][1] = sin(rad);
@@ -90,9 +112,10 @@ struct viewport_space {
 inline mat4 viewport(const logic_space& logicSpace, const viewport_space& viewportSpace) {
     auto originTranslate = translate({-logicSpace.x, -logicSpace.y, 0.0f});
     auto viewTranslate   = translate({viewportSpace.x, viewportSpace.y, 0.0f});
-    auto viewScale =
-            scale({viewportSpace.width / logicSpace.width,
-                   viewportSpace.height / logicSpace.height,
-                   1.0f});
+    auto viewScale       = scale(
+            {viewportSpace.width / logicSpace.width, viewportSpace.height / logicSpace.height, 1.0f}
+    );
     return viewTranslate * viewScale * originTranslate;
 }
+
+}// namespace transform
