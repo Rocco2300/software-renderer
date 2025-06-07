@@ -301,6 +301,9 @@ void destroy(render_data& renderer) {
 void begin(render_data& renderer) {
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(0, 0, 0, 1);
+
+    sfr::texture::clear(renderer.colorBuf, color{});
+    sfr::texture::clear(renderer.depthBuf, vec3(1.f));
 }
 
 void render(render_data& renderer, const camera::camera_data& camera, const mesh::mesh_data& mesh) {
