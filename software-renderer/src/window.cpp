@@ -26,6 +26,7 @@ window_data init(int width, int height) {
 
     window.glfwWindow = glfwWindow;
     glfwMakeContextCurrent(glfwWindow);
+    glfwSetInputMode(window.glfwWindow, GLFW_STICKY_KEYS, GLFW_TRUE);
 
     return window;
 }
