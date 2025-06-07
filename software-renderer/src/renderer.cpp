@@ -7,6 +7,7 @@
 #include "math/vec.hpp"
 #include "math/util.hpp"
 #include "mesh.hpp"
+#include "camera.hpp"
 
 #include <cassert>
 #include <cstring>
@@ -306,16 +307,14 @@ void render(render_data& renderer, const mesh::mesh_data& mesh) {
     logic_space logicSpace{-1, -1, 2, 2};
     viewport_space viewportSpace{0, 0, 1280, 720};
 
-    mat4 transformation = mat4(1.f);
-    transformation *= perspective(deg2Rad(60.f), 16.0f / 9.0f, 0.1f, 100.f);
-    transformation *= view(vec3(0, 0, 4), vec3(0, 0, 1), vec3(1, 0, 0), vec3(0, 1, 0));
+    auto camera = camera::init(vec3(0, 0, 4), 60.f);
 
     std::vector<vec3> transformedVertices(mesh.vertices.size());
 
     //std::vector<u32> clippedIndices;
     //std::vector<vec3> clippedVertices;
 
-    clipSpaceTransform(mesh.vertices, transformation, transformedVertices);
+    clipSpaceTransform(mesh.vertices, transform(camera), transformedVertices);
     // TODO: make work
     //clipScene(mesh.indices, transformedVertices, clippedIndices, clippedVertices);
     viewportTransform(logicSpace, viewportSpace, transformedVertices, transformedVertices);
