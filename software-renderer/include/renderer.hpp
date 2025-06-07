@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types.hpp"
+#include "camera.hpp"
 #include "texture.hpp"
 
 namespace sfr::mesh {
@@ -24,7 +25,7 @@ struct render_data {
 
 render_data init(int width, int height);
 void begin(render_data& renderer);
-void render(render_data& renderer, const mesh::mesh_data& mesh);
+void render(render_data& renderer, const camera::camera_data& camera, const mesh::mesh_data& mesh);
 void end(render_data& renderer);
 
 };
