@@ -1,5 +1,6 @@
 // clang-format off
 #include "mesh.hpp"
+#include "camera.hpp"
 #include "renderer.hpp"
 #include "window.hpp"
 
@@ -17,11 +18,15 @@ int main() {
     std::cout << "Mesh vertex count: " << mesh.vertices.size() << '\n';
     std::cout << "Mesh normal count: " << mesh.normals.size() << '\n';
 
+    auto camera = sfr::camera::init(vec3(0, 0, 4), 60.f);
+    sfr::camera::rotateOY(camera, 45.f);
+    sfr::camera::rotateOX(camera, 25.f);
+
     auto renderer = sfr::renderer::init(WindowWidth, WindowHeight);
 
     while (!sfr::window::shouldClose(window)) {
         sfr::renderer::begin(renderer);
-        sfr::renderer::render(renderer, mesh);
+        sfr::renderer::render(renderer, camera, mesh);
         sfr::renderer::end(renderer);
 
         sfr::window::display(window);

@@ -15,6 +15,10 @@ struct camera_data {
 };
 
 camera_data init(const vec3& position, float fov);
-mat4 transform(const camera_data& camera);
+mat4 getTransform(const camera_data& camera);
+
+void rotateOX(camera_data& camera, float angle);
+void rotateOY(camera_data& camera, float angle);
+void rotateOZ(camera_data& camera, float angle);
 
 };

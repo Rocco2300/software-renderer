@@ -54,8 +54,8 @@ static void clipSpaceTransform(
 }
 
 static void viewportTransform(
-        const logic_space& logicSpace,
-        const viewport_space& viewportSpace,
+        const transform::logic_space& logicSpace,
+        const transform::viewport_space& viewportSpace,
         const std::vector<vec3>& vertices,
         std::vector<vec3>& output
 ) {
@@ -303,18 +303,16 @@ void begin(render_data& renderer) {
     glClearColor(0, 0, 0, 1);
 }
 
-void render(render_data& renderer, const mesh::mesh_data& mesh) {
-    logic_space logicSpace{-1, -1, 2, 2};
-    viewport_space viewportSpace{0, 0, 1280, 720};
-
-    auto camera = camera::init(vec3(0, 0, 4), 60.f);
+void render(render_data& renderer, const camera::camera_data& camera, const mesh::mesh_data& mesh) {
+    transform::logic_space logicSpace{-1, -1, 2, 2};
+    transform::viewport_space viewportSpace{0, 0, 1280, 720};
 
     std::vector<vec3> transformedVertices(mesh.vertices.size());
 
     //std::vector<u32> clippedIndices;
     //std::vector<vec3> clippedVertices;
 
-    clipSpaceTransform(mesh.vertices, transform(camera), transformedVertices);
+    clipSpaceTransform(mesh.vertices, getTransform(camera), transformedVertices);
     // TODO: make work
     //clipScene(mesh.indices, transformedVertices, clippedIndices, clippedVertices);
     viewportTransform(logicSpace, viewportSpace, transformedVertices, transformedVertices);
