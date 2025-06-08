@@ -2,12 +2,12 @@
 
 #include <GL/gl3w.h>
 
+#include "camera.hpp"
 #include "math/mat.hpp"
 #include "math/transform.hpp"
-#include "math/vec.hpp"
 #include "math/util.hpp"
+#include "math/vec.hpp"
 #include "mesh.hpp"
-#include "camera.hpp"
 
 #include <cassert>
 #include <cstring>
@@ -341,6 +341,154 @@ void end(render_data& renderer) {
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
+static void drawLineLow(
+        render_data& renderer,
+        const vec3& startVertex,
+        const vec3& endVertex,
+        const vec3& startNormal,
+        const vec3& endNormal
+) {
+    auto x0 = startVertex.x;
+    auto y0 = startVertex.y;
+    auto x1 = endVertex.x;
+    auto y1 = endVertex.y;
+
+    auto dx = x1 - x0;
+    auto dy = y1 - y0;
+    auto yi = 1;
+    if (dy < 0) {
+        yi = -1;
+        dy = -dy;
+    }
+    auto error = (2 * dy) - dx;
+    auto y = y0;
+
+    for (auto x = x0; x < x1; x++) {
+        auto t = (x - x0) / (x1 - x0);
+        auto depth = sfr::texture::getDepth(renderer.depthBuf, x, y);
+        auto depth0 = sfr::texture::getDepth(renderer.depthBuf, x0, y0);
+        auto depth1 = sfr::texture::getDepth(renderer.depthBuf, x1, y1);
+        auto newDepth = depth0 + (depth1 - depth0) * t;
+
+        if (newDepth >= depth) {
+            sfr::texture::setPixel(renderer.colorBuf, x, y, color(255, 0, 0));
+            sfr::texture::setPixel(renderer.depthBuf, x, y, vec3(newDepth));
+        }
+
+        if (error > 0) {
+            y += yi;
+            error += 2 * (dy - dx);
+        } else {
+            error += 2 * dy;
+        }
+    }
+}
+
+static void drawLineHigh(
+        render_data& renderer,
+        const vec3& startVertex,
+        const vec3& endVertex,
+        const vec3& startNormal,
+        const vec3& endNormal
+) {
+    auto x0 = startVertex.x;
+    auto y0 = startVertex.y;
+    auto x1 = endVertex.x;
+    auto y1 = endVertex.y;
+
+    auto dx = x1 - x0;
+    auto dy = y1 - y0;
+    auto xi = 1;
+    if (dx < 0) {
+        xi = -1;
+        dx = -dx;
+    }
+    auto error = (2 * dx) - dy;
+    auto x = x0;
+
+    for (auto y = y0; y < y1; y++) {
+        auto t = (y - y0) / (y1 - y0);
+        auto depth = sfr::texture::getDepth(renderer.depthBuf, x, y);
+        auto depth0 = sfr::texture::getDepth(renderer.depthBuf, x0, y0);
+        auto depth1 = sfr::texture::getDepth(renderer.depthBuf, x1, y1);
+        auto newDepth = depth0 + (depth1 - depth0) * t;
+
+        if (newDepth >= depth) {
+            sfr::texture::setPixel(renderer.colorBuf, x, y, color(255, 0, 0));
+            sfr::texture::setPixel(renderer.depthBuf, x, y, vec3(newDepth));
+        }
+
+        if (error > 0) {
+            x += xi;
+            error += 2 * (dx - dy);
+        } else {
+            error += 2 * dx;
+        }
+    }
+}
+
+static void drawLine(
+        render_data& renderer,
+        const vec3& startVertex,
+        const vec3& endVertex,
+        const vec3& startNormal,
+        const vec3& endNormal
+) {
+    auto x0 = startVertex.x;
+    auto y0 = startVertex.y;
+    auto x1 = endVertex.x;
+    auto y1 = endVertex.y;
+
+    if (abs(y1 - y0) < abs(x1 - x0)) {
+        if (x0 > x1) {
+            drawLineLow(renderer, endVertex, startVertex, endNormal, startNormal);
+        } else {
+            drawLineLow(renderer, startVertex, endVertex, startNormal, endNormal);
+        }
+    } else {
+        if (y0 > y1) {
+            drawLineHigh(renderer, endVertex, startVertex, endNormal, startNormal);
+        } else {
+            drawLineHigh(renderer, startVertex, endVertex, startNormal, endNormal);
+        }
+    }
+}
+
+static void drawLines(
+        render_data& renderer,
+        const std::vector<u32>& indices,
+        const std::vector<vec3>& vertices,
+        const std::vector<vec3>& normals,
+        int index
+) {
+    auto& v1  = vertices[indices[index + 0]];
+    auto& v2  = vertices[indices[index + 1]];
+    auto& v3  = vertices[indices[index + 2]];
+    auto& v1N = normals[indices[index + 0]];
+    auto& v2N = normals[indices[index + 1]];
+    auto& v3N = normals[indices[index + 2]];
+
+    // might
+    auto up    = vec3(0, 1, 0);
+    auto line1 = v2 - v1;
+    auto line2 = v3 - v2;
+    auto line3 = v1 - v3;
+
+    auto line1Left = dot(up, line1) > 0;
+    auto line2Left = dot(up, line2) > 0;
+    auto line3Left = dot(up, line3) > 0;
+
+    if (line1Left) {
+        drawLine(renderer, v1, v2, v1N, v2N);
+    }
+    if (line2Left) {
+        drawLine(renderer, v2, v3, v2N, v3N);
+    }
+    if (line3Left) {
+        drawLine(renderer, v3, v1, v3N, v1N);
+    }
+}
+
 static void raster(
         render_data& renderer,
         const std::vector<u32>& indices,
@@ -362,6 +510,8 @@ static void raster(
         auto bottom = std::min(std::min(v1.y, v2.y), v3.y);
         auto top    = std::max(std::max(v1.y, v2.y), v3.y);
         auto right  = std::max(std::max(v1.x, v2.x), v3.x);
+
+        //drawLines(renderer, indices, vertices, normals, i);
         vec2 p{};
         for (p.y = bottom; p.y <= top; p.y++) {
             for (p.x = left; p.x <= right; p.x++) {
@@ -374,10 +524,12 @@ static void raster(
                 auto w     = subArea3 / area;
                 auto depth = u * v1.z + v * v2.z + w * v3.z;
 
-                const float eps     = 12.f;
-                auto above          = sfr::texture::getDepth(renderer.depthBuf, p.x, p.y) >= depth;
+                const float eps     = 1.0f;
                 auto inBounds       = (p.x >= 0 && p.x < width && p.y >= 0 && p.y < height);
-                auto insideTriangle = std::abs(area - (subArea1 + subArea2 + subArea3)) < eps;
+                auto above          = (inBounds)
+                                              ? sfr::texture::getDepth(renderer.depthBuf, p.x, p.y) >= depth
+                                              : 0;
+                auto insideTriangle = std::abs(area - (subArea1 + subArea2 + subArea3)) <= eps;
 
                 auto fragNormal = u * v1N + v * v2N + w * v3N;
                 auto col =
@@ -385,8 +537,10 @@ static void raster(
                               encodeNormal(fragNormal.y),
                               encodeNormal(fragNormal.z));
                 if (insideTriangle && inBounds && above) {
-                    sfr::texture::setPixel(renderer.colorBuf, p.x, p.y, col);
-                    sfr::texture::setPixel(renderer.depthBuf, p.x, p.y, vec3(depth));
+                    auto pixelX = static_cast<int>(std::floor(p.x));
+                    auto pixelY = static_cast<int>(std::floor(p.y));
+                    sfr::texture::setPixel(renderer.colorBuf, pixelX, pixelY, col);
+                    sfr::texture::setPixel(renderer.depthBuf, pixelX, pixelY, vec3(depth));
                 }
             }
         }
