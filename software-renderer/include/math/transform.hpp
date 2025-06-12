@@ -73,8 +73,8 @@ inline mat4 rotateOZ(float angle) {
 
 inline mat4 perspective(float fovy, float aspect, float zNear, float zFar) {
     auto mat  = mat4(1.f);
-    mat[0][0] = 1.f / (std::tan(fovy / 2.f) * aspect);
-    mat[1][1] = 1.f / std::tan(fovy / 2.f);
+    mat[0][0] = 1.f / (std::tan(deg2Rad(fovy / 2.f)) * aspect);
+    mat[1][1] = 1.f / std::tan(deg2Rad(fovy / 2.f));
     mat[2][2] = (-1.f * (zFar + zNear)) / (zFar - zNear);
     mat[3][3] = 0.0f;
 

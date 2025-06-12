@@ -35,9 +35,9 @@ static void updateTexture(
 
 const std::vector<color> triangleColors = {{255, 0, 0}, {0, 255, 0}, {0, 0, 255}};
 
-static float triangleArea(const vec2& v1, const vec2& v2, const vec2& v3) {
-    auto mat = mat3(v1, v2, v3);
-    return 0.5f * std::abs(det(mat));
+static float edge(const vec2& v1, const vec2& v2, const vec2& v3) {
+    //return ((v3.x - v1.x) * (v2.y - v1.y) - (v3.y - v1.y) * (v2.x - v1.x)); // CCW
+    return ((v2.x - v1.x) * (v3.y - v1.y) - (v2.y - v1.y) * (v3.x - v1.x)); // CW
 }
 
 static void clipSpaceTransform(
@@ -351,44 +351,55 @@ static void raster(
     auto height = renderer.height;
     for (int i = 0; i < indices.size(); i += 3) {
         //auto& color = triangleColors[(i / 3) % 3];
-        auto& v1    = vertices[indices[i + 0]];
-        auto& v2    = vertices[indices[i + 1]];
-        auto& v3    = vertices[indices[i + 2]];
+        auto& v1 = vertices[indices[i + 0]];
+        auto& v2 = vertices[indices[i + 1]];
+        auto& v3 = vertices[indices[i + 2]];
+
+        auto area = edge(v1, v2, v3);
+
         auto& v1N   = normals[indices[i + 0]];
         auto& v2N   = normals[indices[i + 1]];
         auto& v3N   = normals[indices[i + 2]];
-        auto area   = triangleArea(vec2(v1), vec2(v2), vec2(v3));
-        auto left   = std::min(std::min(v1.x, v2.x), v3.x);
-        auto bottom = std::min(std::min(v1.y, v2.y), v3.y);
-        auto top    = std::max(std::max(v1.y, v2.y), v3.y);
-        auto right  = std::max(std::max(v1.x, v2.x), v3.x);
+        auto left   = std::floor(std::min(std::min(v1.x, v2.x), v3.x));
+        auto bottom = std::floor(std::min(std::min(v1.y, v2.y), v3.y));
+        auto top    = std::floor(std::max(std::max(v1.y, v2.y), v3.y));
+        auto right  = std::floor(std::max(std::max(v1.x, v2.x), v3.x));
 
-        //drawLines(renderer, indices, vertices, normals, i);
-        vec2 p{};
-        for (p.y = bottom; p.y <= top; p.y++) {
-            for (p.x = left; p.x <= right; p.x++) {
-                auto subArea1 = triangleArea(p, v2, v3);
-                auto subArea2 = triangleArea(v1, p, v3);
-                auto subArea3 = triangleArea(v1, v2, p);
+        for (int y = bottom; y <= top; y++) {
+            for (int x = left; x <= right; x++) {
+                vec2 p{x + 0.5f, y + 0.5f};
 
-                auto u     = subArea1 / area;
-                auto v     = subArea2 / area;
-                auto w     = subArea3 / area;
+                auto edge1 = edge(v2, v3, p);
+                auto edge2 = edge(v3, v1, p);
+                auto edge3 = edge(v1, v2, p);
+
+                auto u     = edge1 / area;
+                auto v     = edge2 / area;
+                auto w     = edge3 / area;
                 auto depth = u * v1.z + v * v2.z + w * v3.z;
 
-                const float eps     = 1.0f;
-                auto inBounds       = (p.x >= 0 && p.x < width && p.y >= 0 && p.y < height);
-                auto above          = (inBounds)
-                                              ? sfr::texture::getDepth(renderer.depthBuf, p.x, p.y) >= depth
-                                              : 0;
-                auto insideTriangle = std::abs(area - (subArea1 + subArea2 + subArea3)) <= eps;
+                auto shouldDraw = [&]() {
+                    // check if off-screen
+                    if (p.x < 0 || p.x >= width || p.y < 0 || p.y >= height) {
+                        return false;
+                    }
+
+                    // check if pixel would be obscured
+                    if (sfr::texture::getDepth(renderer.depthBuf, p.x, p.y) < depth) {
+                        return false;
+                    }
+
+                    // check if pixel is inside triangle
+                    return edge1 >= 0 && edge2 >= 0 && edge3 >= 0;
+                };
 
                 auto fragNormal = u * v1N + v * v2N + w * v3N;
+                // TODO: remove placeholder
                 auto col =
                         color(encodeNormal(fragNormal.x),
                               encodeNormal(fragNormal.y),
                               encodeNormal(fragNormal.z));
-                if (insideTriangle && inBounds && above) {
+                if (shouldDraw()) {
                     auto pixelX = static_cast<int>(std::floor(p.x));
                     auto pixelY = static_cast<int>(std::floor(p.y));
                     sfr::texture::setPixel(renderer.colorBuf, pixelX, pixelY, col);
