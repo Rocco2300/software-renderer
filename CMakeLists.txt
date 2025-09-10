@@ -44,4 +44,5 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fast_obj)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+add_subdirectory(${PROJECT_SOURCE_DIR}/sandbox)
 add_subdirectory(${PROJECT_SOURCE_DIR}/software-renderer)
