@@ -42,19 +42,23 @@ static float edge(const vec2& v1, const vec2& v2, const vec2& v3) {
 }
 
 static void clipSpaceTransform(
+        sfr::renderer::thread_pool* threadPool,
         const std::vector<vec3>& vertices,
         const mat4& transformation,
         std::vector<vec3>& output
 ) {
     for (int i = 0; i < vertices.size(); i++) {
-        auto v = transformation * vec4(vertices[i], 1);
-        v /= v.w;
+        //threadPool->process([transformation, vertices, &output, i] {
+          auto v = transformation * vec4(vertices[i], 1);
+          v /= v.w;
 
-        output[i] = vec3(v);
+          output[i] = vec3(v);
+        //});
     }
 }
 
 static void viewportTransform(
+        sfr::renderer::thread_pool* threadPool,
         const transform::logic_space& logicSpace,
         const transform::viewport_space& viewportSpace,
         const std::vector<vec3>& vertices,
@@ -63,8 +67,10 @@ static void viewportTransform(
     auto viewportTransform = viewport(logicSpace, viewportSpace);
 
     for (int i = 0; i < vertices.size(); i++) {
-        auto v    = vec4(vertices[i], 1);
-        output[i] = vec3(viewportTransform * v);
+        //threadPool->process([vertices, &output, i, viewportTransform] {
+          auto v    = vec4(vertices[i], 1);
+          output[i] = vec3(viewportTransform * v);
+        //});
     }
 }
 
@@ -282,12 +288,13 @@ render_data init(int width, int height) {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*) 0);
     glEnableVertexAttribArray(0);
 
-    renderer.width    = width;
-    renderer.height   = height;
-    renderer.colorBuf = texture::create(width, height);
-    renderer.depthBuf = texture::create(width, height, sfr::texture::Depth);
-    renderer.pbo      = createPBO(width, height);
-    renderer.texture  = createTexture(renderer.colorBuf.data, width, height);
+    renderer.width      = width;
+    renderer.height     = height;
+    renderer.colorBuf   = texture::create(width, height);
+    renderer.depthBuf   = texture::create(width, height, sfr::texture::Depth);
+    renderer.pbo        = createPBO(width, height);
+    renderer.texture    = createTexture(renderer.colorBuf.data, width, height);
+    renderer.threadPool = new thread_pool(32);
 
     return renderer;
 }
@@ -316,10 +323,10 @@ void render(render_data& renderer, const camera::camera_data& camera, const mesh
     //std::vector<u32> clippedIndices;
     //std::vector<vec3> clippedVertices;
 
-    clipSpaceTransform(mesh.vertices, getTransform(camera), transformedVertices);
+    clipSpaceTransform(renderer.threadPool, mesh.vertices, getTransform(camera), transformedVertices);
     // TODO: make work
     //clipScene(mesh.indices, transformedVertices, clippedIndices, clippedVertices);
-    viewportTransform(logicSpace, viewportSpace, transformedVertices, transformedVertices);
+    viewportTransform(renderer.threadPool, logicSpace, viewportSpace, transformedVertices, transformedVertices);
 
     raster(renderer, mesh.indices, transformedVertices, mesh.normals);
 }
@@ -398,10 +405,16 @@ static void rasterizeTriangle(render_data& renderer, triangle_data& triangle) {
     auto top    = std::floor(std::max(std::max(triangle.vertices[0].y, triangle.vertices[1].y), triangle.vertices[2].y));
     auto right  = std::floor(std::max(std::max(triangle.vertices[0].x, triangle.vertices[1].x), triangle.vertices[2].x));
 
+    int lineCount = top - bottom;
+    //renderer.threadPool->barrier(lineCount);
+    auto threadPool = sfr::renderer::thread_pool(lineCount);
     for (int y = bottom; y <= top; y++) {
-        for (int x = left; x <= right; x++) {
-            drawPixel(renderer, triangle, x, y);
-        }
+        //renderer.threadPool->process([&] {
+        threadPool.process([&] {
+          for (int x = left; x <= right; x++) {
+              drawPixel(renderer, triangle, x, y);
+          }
+        });
     }
     // clang-format on
 }

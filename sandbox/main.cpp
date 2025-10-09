@@ -118,6 +118,118 @@ private:
     }
 };
 
+class MultiApplierAlt {
+private:
+    std::function<void(int&)> m_func;
+
+    bool m_processing = false;
+    bool m_shouldTerminate = false;
+    int m_total = 0;
+    std::atomic<int> m_counter = 0;
+    std::mutex m_queueMutex;
+    std::mutex m_processingMutex;
+    std::condition_variable m_mutexCondition;
+    std::condition_variable m_processingCondition;
+    std::vector<std::thread> m_threads;
+    std::queue<std::function<void()>> m_jobs;
+
+public:
+    MultiApplierAlt(const std::function<void(int&)>& func) {
+        m_func = func;
+
+        auto threadNo = std::thread::hardware_concurrency();
+        for (int i = 0; i < threadNo; i++) {
+            m_threads.emplace_back(&MultiApplierAlt::threadLoop, this);
+        }
+    }
+
+    ~MultiApplierAlt() {
+        {
+            std::unique_lock<std::mutex> lock(m_queueMutex);
+            m_shouldTerminate = true;
+        }
+
+        m_mutexCondition.notify_all();
+
+        for (auto& thread : m_threads) {
+            thread.join();
+        }
+
+        m_threads.clear();
+    }
+
+    void setCount(int number) {
+        {
+            std::unique_lock<std::mutex> lock(m_processingMutex);
+            m_processingCondition.wait(lock, [&]{ return !m_processing || m_shouldTerminate; });
+        }
+
+        m_total = number;
+        m_processing = true;
+    }
+
+    void process(std::vector<int>& data) {
+        {
+            std::unique_lock<std::mutex> lock(m_processingMutex);
+            m_processingCondition.wait(lock, [&]{ return !m_processing; });
+        }
+
+        m_processing = true;
+        m_total = data.size();
+        m_counter = 0;
+
+        for (auto& el : data) {
+            queueJob([&] () {
+              m_func(el);
+
+              m_counter++;
+              if (m_counter == m_total) {
+                  m_processing = false;
+                  m_processingCondition.notify_one();
+              }
+            });
+        }
+    }
+
+    void queueJob(const std::function<void()>& job) {
+        {
+            std::unique_lock<std::mutex> lock(m_queueMutex);
+            m_jobs.emplace([&] () {
+                job();
+
+                m_counter++;
+                if (m_counter == m_total) {
+                    m_processing = false;
+                    m_processingCondition.notify_one();
+                }
+            });
+        }
+
+        m_mutexCondition.notify_one();
+    }
+
+private:
+    void threadLoop() {
+        while (true) {
+            std::function<void()> job;
+            {
+                std::unique_lock<std::mutex> lock(m_queueMutex);
+                m_mutexCondition.wait(lock, [this] {
+                  return !m_jobs.empty() || m_shouldTerminate;
+                });
+
+                if (m_shouldTerminate && m_jobs.empty()) {
+                    return;
+                }
+
+                job = m_jobs.front();
+                m_jobs.pop();
+            }
+            job();
+        }
+    }
+};
+
 void printData(const std::vector<int>& data) {
     for (const auto& el : data) {
         std::cout << el << ' ';
@@ -125,7 +237,48 @@ void printData(const std::vector<int>& data) {
     std::cout << '\n';
 }
 
+template <typename T, int C>
+struct TestClass {
+    T m_data[C]{};
+};
+
+template <typename T>
+struct TestClass<T, 3> {
+    T m_data[3];
+};
+
+template <typename T>
+struct TestClass<T, 4> {
+    T m_data[4];
+
+    TestClass(const TestClass<T, 3>& other) {
+        m_data[0] = other.m_data[0];
+        m_data[1] = other.m_data[1];
+        m_data[2] = other.m_data[2];
+        m_data[3] = 1;
+    }
+
+    void print() {
+        std::cout << m_data[0] << ' ' << m_data[1] << ' ' << m_data[2] << ' ' << m_data[3] << '\n';
+    }
+};
+
+using TestClass3 = TestClass<int, 3>;
+using TestClass4 = TestClass<int, 4>;
+
+void func(const std::vector<TestClass3>& list) {
+    for (int i = 0; i < list.size(); i++) {
+        std::thread t([&] {
+          TestClass4 test(list[i]);
+          test.print();
+        });
+
+        t.join();
+    }
+}
+
 int main() {
+    /*
     std::vector<int> testData1{1, 2, 3, 4, 5};
     std::vector<int> testData2{2, 3, 4, 5, 6};
     std::vector<int> testData3{3, 4, 5, 6, 7};
@@ -162,6 +315,15 @@ int main() {
     for (const auto& el : s) {
         std::cout << el << '\n';
     }
+    */
+
+    std::vector<TestClass3> list = {
+            TestClass3(),
+            TestClass3(),
+            TestClass3()
+    };
+
+    func(list);
 
     return 0;
 }

@@ -3,6 +3,7 @@
 #include "types.hpp"
 #include "camera.hpp"
 #include "texture.hpp"
+#include "thread_pool.hpp"
 
 namespace sfr::mesh {
 struct mesh_data;
@@ -21,6 +22,8 @@ struct render_data {
 
     int width;
     int height;
+
+    thread_pool* threadPool;
 };
 
 render_data init(int width, int height);
