@@ -226,9 +226,9 @@ static void clipTriangles(
         tri.v.resize(3);
         tri.i.resize(3);
 
-        tri.i[0] = i + 0;
-        tri.i[1] = i + 1;
-        tri.i[2] = i + 2;
+        tri.i[0] = inputIndices[i + 0];
+        tri.i[1] = inputIndices[i + 1];
+        tri.i[2] = inputIndices[i + 2];
 
         tri.v[0] = inputVertices[inputIndices[i + 0]];
         tri.v[1] = inputVertices[inputIndices[i + 1]];
@@ -407,14 +407,14 @@ static void rasterizeTriangle(render_data& renderer, triangle_data& triangle) {
 
     int lineCount = top - bottom;
     //renderer.threadPool->barrier(lineCount);
-    auto threadPool = sfr::renderer::thread_pool(lineCount);
+    //auto threadPool = sfr::renderer::thread_pool(lineCount);
     for (int y = bottom; y <= top; y++) {
         //renderer.threadPool->process([&] {
-        threadPool.process([&] {
+        //threadPool.process([&] {
           for (int x = left; x <= right; x++) {
               drawPixel(renderer, triangle, x, y);
           }
-        });
+        //});
     }
     // clang-format on
 }
