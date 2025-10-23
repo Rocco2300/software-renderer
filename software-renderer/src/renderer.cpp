@@ -49,10 +49,10 @@ static void clipSpaceTransform(
 ) {
     for (int i = 0; i < vertices.size(); i++) {
         //threadPool->process([transformation, vertices, &output, i] {
-          auto v = transformation * vec4(vertices[i], 1);
-          v /= v.w;
+        auto v = transformation * vec4(vertices[i], 1);
+        v /= v.w;
 
-          output[i] = vec3(v);
+        output[i] = vec3(v);
         //});
     }
 }
@@ -68,13 +68,237 @@ static void viewportTransform(
 
     for (int i = 0; i < vertices.size(); i++) {
         //threadPool->process([vertices, &output, i, viewportTransform] {
-          auto v    = vec4(vertices[i], 1);
-          output[i] = vec3(viewportTransform * v);
+        auto v    = vec4(vertices[i], 1);
+        output[i] = vec3(viewportTransform * v);
         //});
     }
 }
 
 static u8 encodeNormal(float n) { return (u8) ((n * 0.5f + 0.5f) * 255.f); }
+
+static bool numberOutOfUnitBounds(float x) { return x < -1.f || x > 1.f; }
+
+static bool pointOutOfCubeBounds(vec3 v) {
+    return numberOutOfUnitBounds(v.x) || numberOutOfUnitBounds(v.y) || numberOutOfUnitBounds(v.z);
+}
+
+static bool triangleOutOfCubeBounds(const vec3& v1, const vec3& v2, const vec3& v3) {
+    return pointOutOfCubeBounds(v1) || pointOutOfCubeBounds(v2) || pointOutOfCubeBounds(v3);
+}
+
+enum volume_side { Near = 0, Far, Right, Left, Top, Bottom };
+
+static float signedDistance(volume_side side, const vec3& vertex) {
+    float dist{};
+    switch (side) {
+    case Near:
+        dist = vertex.z + 1;
+        break;
+    case Far:
+        dist = -vertex.z + 1;
+        break;
+    case Right:
+        dist = -vertex.x + 1;
+        break;
+    case Left:
+        dist = vertex.x + 1;
+        break;
+    case Top:
+        dist = -vertex.y + 1;
+        break;
+    case Bottom:
+        dist = vertex.y + 1;
+        break;
+    }
+    return dist;
+}
+
+struct triangles {
+    std::vector<u32> i;
+    std::vector<vec3> v;
+};
+
+static const std::vector<vec3> clipping_origins =
+        {{0, 0, 1}, {0, 0, -1}, {1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}};
+
+static const std::vector<vec3> clipping_normals =
+        {{0, 0, -1}, {0, 0, 1}, {-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}};
+
+static vec3 intersect(volume_side side, vec3 a, vec3 b) {
+    vec3 lineOrigin    = a;
+    vec3 lineDirection = b - a;
+
+    vec3 planeOrigin = clipping_origins[side];
+    vec3 planeNormal = clipping_normals[side];
+
+    float t = dot((planeOrigin - lineOrigin), planeNormal) / dot(lineDirection, planeOrigin);
+    return a + (b - a) * t;
+}
+
+static vec3 intersection(volume_side side, vec3 a, vec3 b) {
+    float t;
+    switch (side) {
+    case Near:
+        t = (-1 - a.z) / (b.z - a.z);
+        break;
+    case Far:
+        t = (1 - a.z) / (b.z - a.z);
+        break;
+    case Right:
+        t = (1 - a.x) / (b.x - a.x);
+        break;
+    case Left:
+        t = (-1 - a.x) / (b.x - a.x);
+        break;
+    case Top:
+        t = (1 - a.y) / (b.y - a.y);
+        break;
+    case Bottom:
+        t = (-1 - a.y) / (b.y - a.y);
+        break;
+    }
+
+    return a + (b - a) * t;
+}
+
+static void clipTriangles(
+        const std::vector<u32>& indices,
+        std::vector<vec3>& vertices,
+        std::vector<u32>& outputIndices
+) {
+    // clang-format off
+    auto allPositive = [](float d0, float d1, float d2) { return d0 >= 0 && d1 >= 0 && d2 >= 0; };
+    auto allNegative = [](float d0, float d1, float d2) { return d0 < 0 && d1 < 0 && d2 < 0; };
+    auto onePositive = [](float d0, float d1, float d2) {
+        return (d0 >= 0 && d1 < 0 && d2 < 0) ||
+               (d0 < 0 && d1 >= 0 && d2 < 0) ||
+               (d0 < 0 && d1 < 0 && d2 >= 0);
+    };
+    // clang-format on
+    //std::copy(vertices.begin(), vertices.end(), std::back_inserter(outputVertices));
+
+    std::vector<u32> inputBuffer;
+    std::vector<u32> outputBuffer;
+    inputBuffer = indices;
+    for (int side = 0; side < 6; side++) {
+        for (int i = 0; i < inputBuffer.size(); i += 3) {
+            auto i1 = inputBuffer[i + 0];
+            auto i2 = inputBuffer[i + 1];
+            auto i3 = inputBuffer[i + 2];
+            auto v1 = vertices[i1];
+            auto v2 = vertices[i2];
+            auto v3 = vertices[i3];
+            auto d1 = signedDistance(static_cast<volume_side>(side), v1);
+            auto d2 = signedDistance(static_cast<volume_side>(side), v2);
+            auto d3 = signedDistance(static_cast<volume_side>(side), v3);
+
+            //if (triangleOutOfCubeBounds(v1, v2, v3)) {
+            //    continue;
+            //}
+
+            if (allPositive(d1, d2, d3)) {
+                outputBuffer.push_back(i1);
+                outputBuffer.push_back(i2);
+                outputBuffer.push_back(i3);
+            } else if (allNegative(d1, d2, d3)) {
+                continue;
+            } else if (onePositive(d1, d2, d3)) {
+                if (d1 >= 0) {
+                    auto v1i = intersection(static_cast<volume_side>(side), v1, v2);
+                    auto v2i = intersection(static_cast<volume_side>(side), v3, v1);
+
+                    auto v1iIndex = vertices.size();
+                    auto v2iIndex = v1iIndex + 1;
+                    vertices.push_back(v1i);
+                    vertices.push_back(v2i);
+
+                    outputBuffer.push_back(v1iIndex);
+                    outputBuffer.push_back(v2iIndex);
+                    outputBuffer.push_back(i1);
+                } else if (d2 >= 0) {
+                    auto v1i = intersection(static_cast<volume_side>(side), v2, v3);
+                    auto v2i = intersection(static_cast<volume_side>(side), v1, v2);
+
+                    auto v1iIndex = vertices.size();
+                    auto v2iIndex = v1iIndex + 1;
+                    vertices.push_back(v1i);
+                    vertices.push_back(v2i);
+
+                    outputBuffer.push_back(v1iIndex);
+                    outputBuffer.push_back(v2iIndex);
+                    outputBuffer.push_back(i2);
+                } else if (d3 >= 0) {
+                    auto v1i = intersection(static_cast<volume_side>(side), v3, v1);
+                    auto v2i = intersection(static_cast<volume_side>(side), v2, v3);
+
+                    auto v1iIndex = vertices.size();
+                    auto v2iIndex = v1iIndex + 1;
+                    vertices.push_back(v1i);
+                    vertices.push_back(v2i);
+
+                    outputBuffer.push_back(v1iIndex);
+                    outputBuffer.push_back(v2iIndex);
+                    outputBuffer.push_back(i3);
+                }
+            } else {
+                if (d1 <= 0) {
+                    auto v1i = intersection(static_cast<volume_side>(side), v1, v2);
+                    auto v2i = intersection(static_cast<volume_side>(side), v3, v1);
+
+                    auto v1iIndex = vertices.size();
+                    auto v2iIndex = v1iIndex + 1;
+                    vertices.push_back(v1i);
+                    vertices.push_back(v2i);
+
+                    outputBuffer.push_back(v1iIndex);
+                    outputBuffer.push_back(i2);
+                    outputBuffer.push_back(i3);
+
+                    outputBuffer.push_back(v1iIndex);
+                    outputBuffer.push_back(i3);
+                    outputBuffer.push_back(v2iIndex);
+                } else if (d2 <= 0) {
+                    auto v1i = intersection(static_cast<volume_side>(side), v2, v3);
+                    auto v2i = intersection(static_cast<volume_side>(side), v1, v2);
+
+                    auto v1iIndex = vertices.size();
+                    auto v2iIndex = v1iIndex + 1;
+                    vertices.push_back(v1i);
+                    vertices.push_back(v2i);
+
+                    outputBuffer.push_back(v1iIndex);
+                    outputBuffer.push_back(i3);
+                    outputBuffer.push_back(i1);
+
+                    outputBuffer.push_back(v1iIndex);
+                    outputBuffer.push_back(i1);
+                    outputBuffer.push_back(v2iIndex);
+                } else if (d3 <= 0) {
+                    auto v1i = intersection(static_cast<volume_side>(side), v3, v1);
+                    auto v2i = intersection(static_cast<volume_side>(side), v2, v3);
+
+                    auto v1iIndex = vertices.size();
+                    auto v2iIndex = v1iIndex + 1;
+                    vertices.push_back(v1i);
+                    vertices.push_back(v2i);
+
+                    outputBuffer.push_back(v1iIndex);
+                    outputBuffer.push_back(i1);
+                    outputBuffer.push_back(i2);
+
+                    outputBuffer.push_back(v1iIndex);
+                    outputBuffer.push_back(i2);
+                    outputBuffer.push_back(v2iIndex);
+                }
+            }
+        }
+
+        std::swap(inputBuffer, outputBuffer);
+        outputBuffer.clear();
+    }
+
+    outputIndices = std::move(inputBuffer);
+}
 
 namespace sfr::renderer {
 
@@ -140,12 +364,28 @@ void render(render_data& renderer, const camera::camera_data& camera, const mesh
     //std::vector<u32> clippedIndices;
     //std::vector<vec3> clippedVertices;
 
-    clipSpaceTransform(renderer.threadPool, mesh.vertices, getTransform(camera), transformedVertices);
+    clipSpaceTransform(
+            renderer.threadPool,
+            mesh.vertices,
+            getTransform(camera),
+            transformedVertices
+    );
+
+    std::vector<u32> newIndices;
+    std::vector<vec3> newVertices;
+    clipTriangles(mesh.indices, transformedVertices, newIndices);
+
     // TODO: make work
     //clipScene(mesh.indices, transformedVertices, clippedIndices, clippedVertices);
-    viewportTransform(renderer.threadPool, logicSpace, viewportSpace, transformedVertices, transformedVertices);
+    viewportTransform(
+            renderer.threadPool,
+            logicSpace,
+            viewportSpace,
+            transformedVertices,
+            transformedVertices
+    );
 
-    raster(renderer, mesh.indices, transformedVertices, mesh.normals);
+    raster(renderer, newIndices, transformedVertices, mesh.normals);
 }
 
 void end(render_data& renderer) {

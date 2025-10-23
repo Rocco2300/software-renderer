@@ -71,6 +71,21 @@ int main() {
     std::cout << "Mesh index count: " << mesh.indices.size() << '\n';
     std::cout << "Mesh vertex count: " << mesh.vertices.size() << '\n';
     std::cout << "Mesh normal count: " << mesh.normals.size() << '\n';
+    /*
+     // TEST DATA SINGLE TRI
+    auto mesh = sfr::mesh::mesh_data{};
+    mesh.vertices.push_back(vec3{-1, 0, 0});
+    mesh.vertices.push_back(vec3{1, 0, 0});
+    mesh.vertices.push_back(vec3{0, 1, 0});
+
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(1);
+    mesh.indices.push_back(2);
+
+    mesh.normals.push_back(vec3{0, 0, 1});
+    mesh.normals.push_back(vec3{0, 0, 1});
+    mesh.normals.push_back(vec3{0, 0, 1});
+     */
 
     auto camera = sfr::camera::init(vec3(0, 0, 4), 60.f);
     auto renderer = sfr::renderer::init(WindowWidth, WindowHeight);
