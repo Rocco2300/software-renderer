@@ -1,5 +1,4 @@
 # Software Renderer
-___
 
 ![render](render.png)
 
@@ -22,7 +21,6 @@ The project in its current state is almost done, but not quite. The most obvious
 Currently, the latest work I have done can be found on the renderer-clipping branch. I was last working on the triangle clipping algorithm, this branch being an update to the renderer which is being implemented on the renderer branch. The main branch has not been updated in a while.
 
 ## Dependencies
-___
 
 - Catch2 - unit testing framework
 - glfw - window and OpenGL context creation
@@ -32,14 +30,12 @@ ___
 They are all installed by CMake using FetchContent.
 
 ## Requirements
-___
 
 - CMake 3.23 or higher (one which supports CMake < 3.5)
 - MinGW 15.2.0 or equivalent
 
 
 ## Build steps
-___
 
 ```
 git clone github.com/Rocco2300/software-renderer
