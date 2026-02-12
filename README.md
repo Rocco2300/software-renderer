@@ -19,6 +19,8 @@ The project in its current state is almost done, but not quite. The most obvious
 - Custom pipelines using function pointers as vertex/fragment shaders
 - Exploring multithreading
 
+Currently, the latest work I have done can be found on the renderer-clipping branch. I was last working on the triangle clipping algorithm, this branch being an update to the renderer which is being implemented on the renderer branch. The main branch has not been updated in a while.
+
 ## Dependencies
 ___
 
