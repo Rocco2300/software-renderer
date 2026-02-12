@@ -18,5 +18,4 @@ struct mesh_data {
 };
 
 mesh_data loadFromFile(const std::string& path);
-
 };

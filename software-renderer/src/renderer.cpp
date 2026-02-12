@@ -135,7 +135,7 @@ static vec3 intersect(volume_side side, vec3 a, vec3 b) {
     return a + (b - a) * t;
 }
 
-static vec3 intersection(volume_side side, vec3 a, vec3 b) {
+static std::pair<float, vec3> intersection(volume_side side, vec3 a, vec3 b) {
     float t;
     switch (side) {
     case Near:
@@ -158,8 +158,32 @@ static vec3 intersection(volume_side side, vec3 a, vec3 b) {
         break;
     }
 
-    return a + (b - a) * t;
+    return {t, a + (b - a) * t};
 }
+
+static std::tuple<vec3&, vec3&, vec3&> getVertsOnePositiveCase(
+        float& outsideIndex,
+        float d1,
+        float d2,
+        vec3& v1,
+        vec3& v2,
+        vec3& v3
+) {
+
+    if (d1 >= 0) {
+        return {v1, v2, v3};
+    } else if (d2 >= 0) {
+        return {v2, v3, v1};
+    } else {
+        return {v3, v1, v2};
+    }
+}
+
+struct triangle {
+    u32 i1, i2, i3;
+    vec3 v1, v2, v3;
+    float d1, d2, d3;
+};
 
 static void clipTriangles(
         const std::vector<u32>& indices,
@@ -188,6 +212,17 @@ static void clipTriangles(
             auto v1 = vertices[i1];
             auto v2 = vertices[i2];
             auto v3 = vertices[i3];
+            triangle tri{
+                    .i1 = inputBuffer[i + 0],
+                    .i2 = inputBuffer[i + 1],
+                    .i3 = inputBuffer[i + 2],
+                    .v1 = vertices[tri.i1],
+                    .v2 = vertices[tri.i2],
+                    .v3 = vertices[tri.i3],
+                    .d1 = signedDistance(static_cast<volume_side>(side), v1),
+                    .d2 = signedDistance(static_cast<volume_side>(side), v2),
+                    .d3 = signedDistance(static_cast<volume_side>(side), v3)
+            };
             auto d1 = signedDistance(static_cast<volume_side>(side), v1);
             auto d2 = signedDistance(static_cast<volume_side>(side), v2);
             auto d3 = signedDistance(static_cast<volume_side>(side), v3);
@@ -203,9 +238,23 @@ static void clipTriangles(
             } else if (allNegative(d1, d2, d3)) {
                 continue;
             } else if (onePositive(d1, d2, d3)) {
+                /*
+                float insideIndex;
+                auto [inside, outside1, outside2] =
+                        getVertsOnePositiveCase(insideIndex, d1, d2, v1, v2, v3);
+                auto intersection1 = intersection(static_cast<volume_side>(side), inside, outside1);
+                auto intersection2 = intersection(static_cast<volume_side>(side), outside2, inside);
+
+                auto firstIndex  = vertices.size();
+                auto secondIndex = firstIndex + 1;
+
+                outputBuffer.push_back(firstIndex);
+                outputBuffer.push_back(secondIndex);
+                outputBuffer.push_back(insideIndex);
+                */
                 if (d1 >= 0) {
-                    auto v1i = intersection(static_cast<volume_side>(side), v1, v2);
-                    auto v2i = intersection(static_cast<volume_side>(side), v3, v1);
+                    auto [t1, v1i] = intersection(static_cast<volume_side>(side), v1, v2);
+                    auto [t2, v2i] = intersection(static_cast<volume_side>(side), v3, v1);
 
                     auto v1iIndex = vertices.size();
                     auto v2iIndex = v1iIndex + 1;
@@ -216,8 +265,8 @@ static void clipTriangles(
                     outputBuffer.push_back(v2iIndex);
                     outputBuffer.push_back(i1);
                 } else if (d2 >= 0) {
-                    auto v1i = intersection(static_cast<volume_side>(side), v2, v3);
-                    auto v2i = intersection(static_cast<volume_side>(side), v1, v2);
+                    auto [t1, v1i] = intersection(static_cast<volume_side>(side), v2, v3);
+                    auto [t2, v2i] = intersection(static_cast<volume_side>(side), v1, v2);
 
                     auto v1iIndex = vertices.size();
                     auto v2iIndex = v1iIndex + 1;
@@ -228,8 +277,8 @@ static void clipTriangles(
                     outputBuffer.push_back(v2iIndex);
                     outputBuffer.push_back(i2);
                 } else if (d3 >= 0) {
-                    auto v1i = intersection(static_cast<volume_side>(side), v3, v1);
-                    auto v2i = intersection(static_cast<volume_side>(side), v2, v3);
+                    auto [t1, v1i] = intersection(static_cast<volume_side>(side), v3, v1);
+                    auto [t2, v2i] = intersection(static_cast<volume_side>(side), v2, v3);
 
                     auto v1iIndex = vertices.size();
                     auto v2iIndex = v1iIndex + 1;
@@ -242,8 +291,8 @@ static void clipTriangles(
                 }
             } else {
                 if (d1 <= 0) {
-                    auto v1i = intersection(static_cast<volume_side>(side), v1, v2);
-                    auto v2i = intersection(static_cast<volume_side>(side), v3, v1);
+                    auto [t1, v1i] = intersection(static_cast<volume_side>(side), v1, v2);
+                    auto [t2, v2i] = intersection(static_cast<volume_side>(side), v3, v1);
 
                     auto v1iIndex = vertices.size();
                     auto v2iIndex = v1iIndex + 1;
@@ -258,8 +307,8 @@ static void clipTriangles(
                     outputBuffer.push_back(i3);
                     outputBuffer.push_back(v2iIndex);
                 } else if (d2 <= 0) {
-                    auto v1i = intersection(static_cast<volume_side>(side), v2, v3);
-                    auto v2i = intersection(static_cast<volume_side>(side), v1, v2);
+                    auto [t1, v1i] = intersection(static_cast<volume_side>(side), v2, v3);
+                    auto [t2, v2i] = intersection(static_cast<volume_side>(side), v1, v2);
 
                     auto v1iIndex = vertices.size();
                     auto v2iIndex = v1iIndex + 1;
@@ -274,8 +323,8 @@ static void clipTriangles(
                     outputBuffer.push_back(i1);
                     outputBuffer.push_back(v2iIndex);
                 } else if (d3 <= 0) {
-                    auto v1i = intersection(static_cast<volume_side>(side), v3, v1);
-                    auto v2i = intersection(static_cast<volume_side>(side), v2, v3);
+                    auto [t1, v1i] = intersection(static_cast<volume_side>(side), v3, v1);
+                    auto [t2, v2i] = intersection(static_cast<volume_side>(side), v2, v3);
 
                     auto v1iIndex = vertices.size();
                     auto v2iIndex = v1iIndex + 1;
